@@ -1,45 +1,65 @@
 # jscrossword
 
-**jscrossword** is a lightweight JavaScript library for reading and writing crossword files in multiple formats.
+**jscrossword** is a lightweight JavaScript library for reading, writing, and exporting crossword puzzles in multiple formats.\
 It runs both **in the browser** (via a bundled script) and **on the command line** (via a Node.js CLI tool).
 
-It supports parsing/exporting the most common crossword file types used by constructors and solvers:
+It supports the most common crossword file types used by constructors and solvers:
 
-* **PUZ** (`.puz`)
-* **JPZ** (`.jpz`, zipped XML)
-* **iPUZ** (`.ipuz`, JSON)
-* **CFP** (`.cfp`, CrossFire)
+- **PUZ** (`.puz`)
+- **JPZ** (`.jpz`, zipped XML)
+- **iPUZ** (`.ipuz`, JSON)
+- **CFP** (`.cfp`, CrossFire)
+- *(experimental)* **VPuz** and **Rows Garden**
 
-All formats are normalized into a single `JSCrossword` class, which provides:
+All formats are normalized into a single `JSCrossword` class that provides:
 
-* Metadata (title, author, copyright, notes, etc.)
-* Cells (grid positions, solutions, numbering, blocks/voids)
-* Words and their clue associations
-* Clue text (with safe HTML escaping for display in browsers)
-* Utility methods (`get_solution_array()`, `get_entry_mapping()`, etc.)
+- Metadata (title, author, copyright, notes)
+- Cells (coordinates, numbering, blocks/voids)
+- Word entries and clue associations
+- Clue text with safe HTML escaping
+- Utility methods like `get_solution_array()` and `get_entry_mapping()`
+- PDF export (`toPDF()`) for browser and CLI
 
 ---
 
 ## Project structure
 
 ```
-src/
-  jscrossword.js       # main entry point, defines JSCrossword
-  grid.js              # helper for numbering and entries
-  formats/             # per-format readers/writers
-    puz.js
-    jpz.js
-    ipuz.js
-    cfp.js
-lib/
-  jsunzip.js           # minimal unzipper for JPZ
-  escape.js            # HTML escaping utilities
-  xmlparser.js         # XML parsing wrapper (browser + Node)
-bin/
-  puz2pdf.js           # CLI entry point
-dist/
-  jscrossword_combined.js  # browser-ready bundle (built)
-  puz2pdf.js               # Node-ready CLI build
+.
+├── bin/
+│   └── puz2pdf.js             # CLI entry point (source)
+├── dist/
+│   ├── jscrossword_combined.js   # Browser-ready bundle (IIFE)
+│   ├── jscrossword_combined.js.map
+│   ├── puz2pdf.mjs               # Node.js CLI bundle (ESM)
+│   └── puz2pdf.mjs.map
+├── src/
+│   ├── jscrossword.js         # main entry, defines JSCrossword class
+│   ├── grid.js                # numbering + entry helpers
+│   ├── formats/               # format-specific readers/writers
+│   │   ├── puz.js
+│   │   ├── jpz.js
+│   │   ├── ipuz.js
+│   │   ├── cfp.js
+│   │   └── ...
+│   ├── lib/                   # support utilities
+│   │   ├── jsunzip.js
+│   │   ├── escape.js
+│   │   ├── xmlparser.js
+│   │   └── ...
+│   └── empty-module.js        # rollup placeholder for browser-only deps
+├── scripts/
+│   ├── obfuscate.js
+│   └── obfuscator_data/
+├── test_files/                # sample puzzles for testing
+│   ├── Dimensionless.puz
+│   ├── FM.jpz
+│   ├── fun.ipuz
+│   └── ...
+├── rollup.config.js
+├── package.json
+├── LICENSE
+└── README.md
 ```
 
 ---
@@ -53,23 +73,70 @@ Include the prebuilt bundle:
 ```html
 <script src="dist/jscrossword_combined.js"></script>
 <script>
-  // Example: load a JPZ file and parse it
+  // Example: load and parse a JPZ file
   fetch("puzzle.jpz")
     .then(resp => resp.arrayBuffer())
     .then(buf => {
       const bytes = new Uint8Array(buf);
       const puzzle = JSCrossword.fromData(bytes);
-      console.log("Loaded puzzle:", puzzle.metadata.title);
+      console.log(`Loaded puzzle: \"${puzzle.metadata.title}\"`);
     });
 </script>
 ```
 
 ---
 
+### Generating PDFs in the browser
+
+You can create and download printable PDFs directly from any supported crossword file — no server required.
+
+```html
+<input type="file" id="fileInput" accept=".puz,.jpz,.ipuz,.cfp" />
+<button id="makePdfBtn" disabled>Make PDF</button>
+
+<script src="dist/jscrossword_combined.js"></script>
+<script>
+  let currentXw = null;
+
+  document.getElementById("fileInput").addEventListener("change", async (evt) => {
+    const file = evt.target.files[0];
+    if (!file) return;
+
+    try {
+      const buf = await file.arrayBuffer();
+      const data = new Uint8Array(buf);
+      const xw = JSCrossword.fromData(data);
+      currentXw = xw;
+      document.getElementById("makePdfBtn").disabled = false;
+      console.log(`Loaded ${file.name}:`, xw);
+    } catch (err) {
+      console.error("File load failed:", err);
+      alert("Could not parse this file.");
+    }
+  });
+
+  document.getElementById("makePdfBtn").addEventListener("click", async () => {
+    if (!currentXw) return alert("Please upload a crossword first.");
+    try {
+      const doc = await currentXw.toPDF();
+      doc.save("crossword.pdf");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Failed to create PDF. See console for details.");
+    }
+  });
+</script>
+```
+
+> 🔹 **Tip:**\
+> The generated PDF respects clue formatting (bold/italic/emoji), layout options, and embedded headers where supported.
+
+---
+
 ### On the command line
 
 The CLI tool is named **`puz2pdf`**.
-It reads a crossword file (PUZ, JPZ, IPUZ, CFP) and produces a PDF.
+It reads a crossword file (`.puz`, `.jpz`, `.ipuz`, `.cfp`) and produces a formatted PDF.
 
 #### Install locally
 
@@ -80,7 +147,7 @@ npm install
 Run with:
 
 ```sh
-node dist/puz2pdf.js path/to/puzzle.puz
+node dist/puz2pdf.mjs path/to/puzzle.puz
 ```
 
 #### Install globally
@@ -115,8 +182,8 @@ npm run build
 
 Outputs:
 
-* `dist/jscrossword_combined.js` (browser bundle)
-* `dist/puz2pdf.js` (Node CLI bundle)
+- `dist/jscrossword_combined.js` — browser bundle (IIFE)
+- `dist/puz2pdf.mjs` — CLI bundle (ESM)
 
 ### Build browser-only
 
@@ -136,24 +203,25 @@ npm run build:cli
 npm run clean
 ```
 
-### Bundle analysis
+### Analyze bundle
 
 ```sh
 npm run build:stats
 ```
 
-This creates a `stats.html` file.
-Open it in your browser to see a visualization of module sizes and dependencies.
+Generates a `stats.html` file showing module sizes and dependency graphs.
 
 ---
 
 ## Notes
 
-* All strings are sanitized in the `JSCrossword` constructor (`sanitize()`), so titles, authors, and clue text are safe to inject into the DOM.
-* Writers (`xw_write_*`) are still under development — parsing is the main focus for now.
+- All strings are sanitized in the `JSCrossword` constructor (`sanitize()`), so puzzle data is safe for DOM insertion.
+- Export functions (`xw_write_*`) are actively being expanded.
+- The PDF generator (`toPDF()`) uses **jsPDF**, **GraphemeSplitter**, and **Twemoji** for Unicode and emoji compatibility.
+- Rollup is used for bundling with optional minification and dependency visualization.
 
 ---
 
 ## License
 
-MIT License © 2025 Crossword Nexus
+MIT License © 2025 [Crossword Nexus](https://crosswordnexus.com)
