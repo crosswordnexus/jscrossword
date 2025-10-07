@@ -1,0 +1,47 @@
+{
+  "type": "module",
+  "name": "JSCrossword",
+  "version": "1.0.0",
+  "description": "JavaScript crossword toolkit for reading/writing PUZ, JPZ, iPUZ, and CFP formats",
+  "main": "dist/jscrossword_combined.js",
+  "scripts": {
+    "build:browser": "rollup -c --environment BUILD:browser",
+    "build:cli": "rollup -c --environment BUILD:cli",
+    "build": "rollup -c",
+    "build:stats": "STATS=true rollup -c",
+    "clean": "rm -rf dist"
+  },
+  "bin": {
+    "puz2pdf": "./dist/puz2pdf.mjs"
+  },
+  "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.1",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.3.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.0.0",
+    "rollup-plugin-visualizer": "^6.0.3"
+  },
+  "license": "MIT",
+  "keywords": [
+    "crossword",
+    "puz",
+    "jpz",
+    "ipuz",
+    "cfp",
+    "parser",
+    "puzzle"
+  ],
+  "author": "Alex Boisvert",
+  "dependencies": {
+    "dompurify": "^3.2.7",
+    "grapheme-splitter": "^1.0.4",
+    "image-size": "^2.0.2",
+    "js-yaml": "^4.1.0",
+    "jspdf": "^3.0.3",
+    "linkedom": "^0.18.12",
+    "lz-string": "^1.5.0",
+    "twemoji": "^14.0.2"
+  }
+}
