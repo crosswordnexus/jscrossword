@@ -234,4 +234,8 @@ export default class JSCrossword {
     return new xwGrid(this.cells);
   }
 
+  static xwGrid(cells) {
+    return new xwGrid(cells);
+  }
+
 }
