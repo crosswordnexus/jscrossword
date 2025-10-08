@@ -126,17 +126,31 @@ export function diagramless(xw) {
 }
 
 export function clueSort(xw) {
+  // Precompute entry words for each clue number
   const entries = xw.get_entry_mapping();
 
-  console.log(xw.clues);
-
   const newClues = xw.clues.map(list => {
-    const sorted = [...list.clue].sort((a, b) => {
-      const entryA = entries[a.number] || "";
-      const entryB = entries[b.number] || "";
-      return entryA.localeCompare(entryB);
-    });
-    return { ...list, clue: sorted };
+    // Pair up each clue with its entry
+    const paired = list.clue.map(c => ({
+      entry: entries[c.number] || "",
+      text: c.text,
+    }));
+
+    // Sort those pairs alphabetically by entry
+    const sortedByEntry = [...paired].sort((a, b) =>
+      a.entry.localeCompare(b.entry)
+    );
+
+    // Extract just the sorted clue texts
+    const sortedTexts = sortedByEntry.map(p => p.text);
+
+    // Assign the sorted texts back to the original clue numbers/order
+    const newClueObjs = list.clue.map((c, i) => ({
+      ...c,
+      text: sortedTexts[i],
+    }));
+
+    return { ...list, clue: newClueObjs };
   });
 
   return new JSCrossword(xw.metadata, xw.cells, xw.words, newClues);
