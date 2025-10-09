@@ -25,12 +25,39 @@ function safeHtmlText(html) {
   return doc.documentElement?.textContent || "";
 }
 
-/** Helper function to have safe characters **/
+/** Helper function to sanitize Unicode for jsPDF-safe output **/
 function foldReplacing(str, fallback = '*') {
-  return Array.from(str).map(c =>
-    emojiRx.test(c) || c.charCodeAt(0) <= 256 ? c : fallback
-  ).join('');
+  const replacements = {
+    // Curly single quotes / apostrophes
+    '‘': "'", '’': "'", '‚': ',', '‛': "'",
+
+    // Curly double quotes
+    '“': '"', '”': '"', '„': '"', '‟': '"',
+
+    // Dashes
+    '–': '-', '—': '-', '−': '-', // en dash, em dash, minus
+
+    // Ellipsis
+    '…': '...',
+
+    // Misc punctuation
+    '•': '*', '◦': '*', '▪': '*', '‒': '-', '―': '-',
+
+    // Non-breaking space
+    '\u00A0': ' ',
+
+    // Trademark-like symbols (optional)
+    '©': '(c)', '®': '(R)', '™': '(TM)',
+  };
+
+  return Array.from(str).map(c => {
+    if (emojiRx.test(c)) return c; // preserve emoji
+    if (replacements[c]) return replacements[c];
+    if (c.charCodeAt(0) <= 256) return c;
+    return fallback;
+  }).join('');
 }
+
 
 /* Helper function to fetch a data URL */
 async function fetchAsDataURL(url, mime = "image/png") {

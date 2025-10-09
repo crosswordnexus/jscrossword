@@ -8,6 +8,22 @@ import { xwGrid } from "../grid.js";
 import { unescapeHtmlClue } from "../lib/escape.js";
 import pkg from "../../package.json" assert { type: "json" };
 
+/** Helper function to determine if we're 0- or 1-indexed **/
+function cellOffset(clues, height, width) {
+  let maxCoord = 0;
+  for (const dir of Object.keys(clues)) {
+    for (const clue of clues[dir]) {
+      if (clue.cells) {
+        for (const [x, y] of clue.cells) {
+          if (x > maxCoord) maxCoord = x;
+          if (y > maxCoord) maxCoord = y;
+        }
+      }
+    }
+  }
+  return maxCoord > width || maxCoord > height ? 0 : 1;
+}
+
 export function xw_read_ipuz(inputData) {
   if (!(inputData instanceof Uint8Array)) {
     throw new Error("IPUZ parser expects Uint8Array input");
@@ -62,18 +78,21 @@ export function xw_read_ipuz(inputData) {
       } else if (cellData !== null && cellData !== undefined) {
         number = cellData.toString();
       }
-      if (number === EMPTY || number === BLOCK) number = null;
+      if (number === EMPTY) number = null;
 
       let solution = '';
       try {
         let raw = data.solution?.[y]?.[x];
-        solution = raw?.value || raw?.cell || '';
-        if (solution) solution = solution.toUpperCase();
+        if (typeof raw === 'string') solution = raw.toUpperCase();
+        else if (raw) solution = (raw.value || raw.cell || '').toUpperCase();
       } catch {}
 
       let type = null;
-      if (solution === BLOCK || number === BLOCK) type = 'block';
-      else if (is_void) type = 'void';
+      if (solution === BLOCK || number === BLOCK) {
+          type = 'block';
+      } else if (data['puzzle'][y][x] === null) {
+          type = 'void';
+      }
 
       const letter = cellData?.value || null;
 
@@ -97,6 +116,11 @@ export function xw_read_ipuz(inputData) {
         number = style.mark.TL || number;
         if (!number) number = style.mark.BL;
         if (!top_right_number) top_right_number = style.mark.BR;
+      }
+
+      // Change the "number" if it isn't real
+      if (number === EMPTY || number === BLOCK) {
+          number = null;
       }
 
       cells.push({
@@ -126,6 +150,10 @@ export function xw_read_ipuz(inputData) {
     titles = [titles[1], titles[0]];
   }
 
+  // Get the offset from the heuristic
+  const offset = cellOffset(data['clues'], height, width);
+  console.log("Detected cell offset: ", offset);
+
   titles.forEach(title => {
     const thisClues = [];
     (data.clues[title] || []).forEach(clue => {
@@ -153,7 +181,7 @@ export function xw_read_ipuz(inputData) {
       });
 
       if (clue.cells && clue.cells.length) {
-        const thisCells = clue.cells.map(c => [c[0] - 1, c[1] - 1]);
+        const thisCells = clue.cells.map(c => [c[0] - offset, c[1] - offset]);
         words.push({
           id: word_id.toString(),
           cells: thisCells
