@@ -36,6 +36,7 @@
   "author": "Alex Boisvert",
   "dependencies": {
     "dompurify": "^3.2.7",
+    "fflate": "^0.8.2",
     "grapheme-splitter": "^1.0.4",
     "image-size": "^2.0.2",
     "js-yaml": "^4.1.0",
