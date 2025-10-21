@@ -21,7 +21,7 @@ const PARSER = new DOMParserImpl();
 /** Helper function to grab textContent **/
 function safeHtmlText(html) {
   if (!html) return "";
-  const doc = PARSER.parseFromString(`<div>${html}</div>`, "application/xml");
+  const doc = PARSER.parseFromString(`<div>${html}</div>`, "text/html");
   return doc.documentElement?.textContent || "";
 }
 
