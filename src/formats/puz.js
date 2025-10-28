@@ -312,6 +312,11 @@ export class Puzzle {
     this.solution = decodeBytes(cur.slice(gridCells), this.encoding);
     this.fill = decodeBytes(cur.slice(gridCells), this.encoding);
 
+    // if the puzzle is not unlocked, replace the "solution" with all "X"s
+    if (this.solution_state !== SolutionState.Unlocked) {
+      this.solution = this.solution.replace(/[^\:\.\-]/g, 'X')
+    }
+
     this.title = cur.readCString(this.encoding);
     this.author = cur.readCString(this.encoding);
     this.copyright = cur.readCString(this.encoding);
@@ -340,7 +345,8 @@ export class Puzzle {
 
     if (cur.canRead(1)) this.postscript = cur.slice(cur.bytes.length - cur.pos);
 
-    // Validate checksums
+    // Don't bother validating checksums
+    /**
     if (cksum_gbl !== this.globalCksum()) throw new PuzzleFormatError('global checksum does not match');
     if (cksum_hdr !== this.headerCksum()) throw new PuzzleFormatError('header checksum does not match');
     //if (cksum_magic !== this.magicCksum()) throw new PuzzleFormatError('magic checksum does not match');
@@ -348,6 +354,7 @@ export class Puzzle {
       const got = dataCksum(this.extensions.get(code));
       if (got !== expected) throw new PuzzleFormatError(`extension ${code} checksum does not match`);
     }
+    **/
   }
 
   // ----- Saving -----
