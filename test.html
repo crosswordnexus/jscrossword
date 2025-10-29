@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>JSCrossword — test_files loader</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 1rem; background:#fafafa; color:#111 }
+    h1 { margin-top:0 }
+    #controls { margin: 1rem 0; }
+    .file-list { display: grid; gap: 0.4rem; }
+    .file-row {
+      display:flex;
+      align-items:center;
+      gap: 0.6rem;
+      padding: 0.5rem;
+      background: white;
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+    }
+    .fname { width: 300px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .status { width:28px; text-align:center; font-size:20px }
+    .title { font-weight:600; }
+    .meta { color:#666; font-size:0.9rem }
+    .error { color: #b00020; font-weight:600 }
+    .ok { color: #007a18; font-weight:700 }
+    .small { font-size:0.85rem; color:#666 }
+    #log { margin-top:1rem; white-space:pre-wrap; font-family: ui-monospace, monospace; max-height:300px; overflow:auto; border-radius:6px; border:1px dashed #eee; padding:0.5rem; background:#fff }
+    button { padding:0.4rem 0.6rem; border-radius:6px; border:1px solid #ccc; background:#fff; cursor:pointer }
+  </style>
+
+  <script src="dist/jscrossword_combined.js"></script>
+
+</head>
+<body>
+  <h1>JSCrossword — Test loader (test_files/)</h1>
+  <div id="controls">
+    <button id="btnReload">Reload list & test</button>
+    <span class="small">Serve this directory with a static server. See notes below.</span>
+  </div>
+
+  <div id="status" class="small">Idle</div>
+
+  <div id="files" class="file-list" style="margin-top:1rem"></div>
+
+  <div id="log" aria-live="polite"></div>
+
+  <script type="module">
+  // ----- CONFIG -----
+  // Optionally edit this list if you do not have test_files/list.json
+  const FILES = [
+    "3x.cfp"
+  , "Dimensionless.puz"
+  , "FM.jpz"
+  , "fun.ipuz"
+  , "GirlDinner.ipuz"
+  , "kaidoku.jpz"
+  , "patchwork_quilt.ipuz"
+  , "stained_glass.vpuz"
+  , "TheArtOfCounting.rg"
+  ];
+
+  // Options forwarded to JSCrossword.fromData (adjust as you like)
+  const FROMDATA_OPTIONS = {
+    lockedHandling: "mask", // "allow" | "mask" | "bruteforce"
+    maskChar: "X",
+    maxBruteForceTimeMs: 10000,
+    verbose: false
+  };
+
+  // ----- UI helpers -----
+  const filesDiv = document.getElementById('files');
+  const logDiv = document.getElementById('log');
+  const statusDiv = document.getElementById('status');
+  document.getElementById('btnReload').onclick = () => start();
+
+  function log(...args) {
+    const t = new Date().toISOString();
+    logDiv.textContent += `[${t}] ` + args.map(a => (a instanceof Error ? (a.message || String(a)) : String(a))).join(' ') + "\n";
+    logDiv.scrollTop = logDiv.scrollHeight;
+  }
+
+  function makeRow(fname) {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    row.innerHTML = `
+      <div class="status" aria-hidden>…</div>
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <div style="display:flex;gap:0.6rem;align-items:baseline">
+          <div class="fname"></div>
+          <div class="title"></div>
+        </div>
+        <div class="meta small"></div>
+      </div>
+    `;
+    row.querySelector('.fname').textContent = fname;
+    return row;
+  }
+
+  // ----- loader logic -----
+  async function fetchFileList() {
+    // Prefer an explicit list.json in test_files/ if present
+    try {
+      const resp = await fetch('test_files/list.json', { cache: 'no-store' });
+      if (resp.ok) {
+        const arr = await resp.json();
+        if (Array.isArray(arr)) return arr;
+      }
+    } catch (e) {
+      // ignore, fallback to FILES
+    }
+    // fallback to FILES constant
+    return FILES.slice();
+  }
+
+  // Attempt to fetch a file as an ArrayBuffer
+  async function fetchAsUint8(fname) {
+    const url = `test_files/${fname}`;
+    const resp = await fetch(url, { cache: 'no-store' });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+    const ab = await resp.arrayBuffer();
+    return new Uint8Array(ab);
+  }
+
+  async function testFile(fname, row) {
+    const statusEl = row.querySelector('.status');
+    const titleEl = row.querySelector('.title');
+    const metaEl = row.querySelector('.meta');
+
+    statusEl.textContent = '⏳';
+    titleEl.textContent = '';
+    metaEl.textContent = 'Fetching...';
+
+    try {
+      const data = await fetchAsUint8(fname);
+
+      // Try parse
+      let js;
+      try {
+        js = JSCrossword.fromData(data, FROMDATA_OPTIONS);
+      } catch (err) {
+        // readers may throw; show message
+        throw new Error(`parse failed: ${err && err.message ? err.message : String(err)}`);
+      }
+
+      // success — show title (fallback to filename)
+      const title = (js.metadata && (js.metadata.title || js.metadata.name)) || '(no title)';
+      statusEl.textContent = '✓';
+      statusEl.className = 'status ok';
+      titleEl.textContent = title;
+      metaEl.textContent = `${js.metadata && js.metadata.crossword_type ? js.metadata.crossword_type + ' · ' : ''} ${js.cells ? js.cells.length : '?'} cells`;
+
+      log(`Loaded ${fname} -> ${title}`);
+    } catch (err) {
+      statusEl.textContent = '✗';
+      statusEl.className = 'status';
+      titleEl.textContent = '';
+      metaEl.innerHTML = `<span class="error">${err.message}</span>`;
+      log(`Error ${fname}: ${err.message || String(err)}`);
+    }
+  }
+
+  async function start() {
+    filesDiv.innerHTML = '';
+    logDiv.textContent = '';
+    statusDiv.textContent = 'Discovering files…';
+    const list = await fetchFileList();
+    if (!list || list.length === 0) {
+      statusDiv.textContent = 'No files found. Edit FILES[] in the script or add test_files/list.json.';
+      return;
+    }
+
+    statusDiv.textContent = `Testing ${list.length} file(s)…`;
+    const rows = [];
+    for (const fname of list) {
+      const row = makeRow(fname);
+      filesDiv.appendChild(row);
+      rows.push({ fname, row });
+    }
+
+    // sequential to avoid a zillion concurrent imports/fetches; change to parallel if you prefer
+    for (const item of rows) {
+      await testFile(item.fname, item.row);
+    }
+
+    statusDiv.textContent = 'Done';
+  }
+
+  // kick off automatically
+  start().catch(e => {
+    log('Fatal:', e);
+    statusDiv.textContent = 'Error during startup';
+  });
+  </script>
+
+</body>
+</html>

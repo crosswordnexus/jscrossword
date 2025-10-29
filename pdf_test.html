@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crossword PDF Test</title>
+  <script src="dist/jscrossword_combined.js"></script>
+</head>
+<body>
+  <h1>Crossword → PDF Test</h1>
+
+  <input type="file" id="fileInput" accept=".puz,.xml,.jpz,.xpz,.ipuz,.cfp,.rg,.vpuz,.rgz">
+  <button id="makePdfBtn" disabled>Make PDF</button>
+
+  <script>
+    let currentXw = null;
+
+    document.getElementById("fileInput").addEventListener("change", async function(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+
+      try {
+        const buf = await file.arrayBuffer();
+        const data = new Uint8Array(buf);
+
+        const xw = JSCrossword.fromData(data);
+        window.jsxw = xw; // for debugging
+        currentXw = xw;
+        document.getElementById("makePdfBtn").disabled = false;
+
+        console.log(`Loaded ${file.name}:`, xw);
+      } catch (err) {
+        console.error("File load failed:", err);
+        alert("Could not parse this file.");
+      }
+    });
+
+    document.getElementById("makePdfBtn").addEventListener("click", async function() {
+      if (!currentXw) {
+        alert("Please upload a crossword first.");
+        return;
+      }
+      try {
+        const options = {};
+        const doc = await currentXw.toPDF(options);
+        doc.save("crossword.pdf");
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+        alert("Failed to create PDF. See console for details.");
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crossword Obfuscator</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; background:#fafafa; color:#222; }
+    h1 { font-size:1.5rem; }
+    label { display:block; margin:0.3rem 0; }
+    input[type="file"] { margin:0.5rem 0; }
+    button { margin-top:1rem; padding:0.5rem 1rem; font-size:1rem; }
+    #log { margin-top:1rem; font-family:monospace; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Crossword Obfuscator</h1>
+
+  <p>Select a crossword file (.puz, .jpz, .ipuz, etc.)</p>
+  <input type="file" id="fileInput" accept=".puz,.jpz,.ipuz,.cfp,.rg" />
+
+  <h3>Choose obfuscation methods:</h3>
+  <label><input type="checkbox" value="downsOnly" /> Downs-Only</label>
+  <label><input type="checkbox" value="turtleify" /> Turtle Power 🐢</label>
+  <label><input type="checkbox" value="letterShuffle" /> Letter Shuffle</label>
+  <label><input type="checkbox" value="clueSort" /> Clue Sort</label>
+  <label><input type="checkbox" value="diagramless" /> Diagramless</label>
+
+  <button id="processBtn">Download Obfuscated .ipuz</button>
+
+  <div id="log"></div>
+
+  <!-- Load the main JSCrossword bundle -->
+  <script src="../dist/jscrossword_combined.js"></script>
+  <!-- Load your extras/mutators file -->
+  <script type="module">
+    import {
+      downsOnly,
+      turtleify,
+      letterShuffle,
+      clueSort,
+      diagramless
+    } from "./obfuscate.js";
+
+    const mutators = { downsOnly, turtleify, letterShuffle, clueSort, diagramless };
+
+    const log = msg => (document.getElementById("log").textContent = msg);
+
+    // Read uploaded file as ArrayBuffer
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(e);
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    document.getElementById("processBtn").addEventListener("click", async () => {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) return alert("Please choose a file first.");
+
+      const file = fileInput.files[0];
+      const chosen = [...document.querySelectorAll("input[type=checkbox]:checked")].map(c => c.value);
+      if (!chosen.length) return alert("Please select at least one method.");
+
+      log(`Reading ${file.name}...`);
+      const buf = await readFileAsArrayBuffer(file);
+      let xw;
+      try {
+        xw = JSCrossword.fromData(new Uint8Array(buf));
+        console.log(xw);
+      } catch (err) {
+        log("❌ Could not parse puzzle: " + err.message);
+        return;
+      }
+
+      log(`Loaded "${xw.metadata.title}" by ${xw.metadata.author}\nApplying: ${chosen.join(", ")}`);
+
+      // Apply all chosen mutators sequentially
+      let out = xw;
+      for (const key of chosen) {
+        const fn = mutators[key];
+        if (fn) out = fn(out);
+      }
+
+      // Convert to IPUZ string and trigger download
+      const ipuzStr = out.toIpuzString();
+      const blob = new Blob([ipuzStr], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      const base = file.name.replace(/\.[^/.]+$/, "");
+      a.download = `${base}_obfuscated.ipuz`;
+      a.click();
+      console.log(JSON.parse(ipuzStr));
+
+      log(`✅ Done! Downloaded ${a.download}`);
+    });
+  </script>
+</body>
+</html>
