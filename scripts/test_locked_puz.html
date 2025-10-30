@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Locked PUZ test</title>
+  <!-- Use the browser bundle -->
+  <script src="dist/jscrossword_combined.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 1rem; background:#fafafa; }
+    pre { background:#fff; border:1px solid #ddd; padding:0.75rem; border-radius:6px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Locked Puzzle Handling Test</h1>
+  <p>Select a locked .puz file and test all three handling modes.</p>
+
+  <input type="file" id="fileInput" accept=".puz" />
+
+  <div id="results" style="margin-top:1.5rem"></div>
+
+  <script>
+    const resultsDiv = document.getElementById("results");
+
+    document.getElementById("fileInput").addEventListener("change", async (evt) => {
+      const file = evt.target.files[0];
+      if (!file) return;
+
+      const buf = await file.arrayBuffer();
+      const data = new Uint8Array(buf);
+
+      // Clear old results
+      resultsDiv.innerHTML = `<h3>${file.name}</h3>`;
+
+      // modes to test
+      const modes = ["allow", "mask", "bruteforce", null];
+
+      for (const mode of modes) {
+        try {
+          const xw = JSCrossword.fromData(data, {
+            lockedHandling: mode,
+            maskChar: "X",
+            maxBruteForceTimeMs: 10000,
+          });
+
+          const soln = xw.get_solution_array()
+            .map(row => row.join("")).join("\n");
+
+          const md = xw.metadata;
+          const info = [
+            `<strong>Mode:</strong> ${mode}`,
+          ].join(" · ");
+
+          const pre = document.createElement("pre");
+          pre.textContent = soln || "(no solution)";
+          const block = document.createElement("div");
+          block.innerHTML = `<p>${info}</p>`;
+          block.appendChild(pre);
+          resultsDiv.appendChild(block);
+
+          console.log(`✅ ${mode}`, { metadata: md, solution: soln });
+        } catch (err) {
+          const block = document.createElement("div");
+          block.innerHTML = `<p><strong>Mode:</strong> ${mode} → ❌ ${err.message}</p>`;
+          resultsDiv.appendChild(block);
+          console.error(`❌ ${mode}:`, err);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

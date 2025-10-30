@@ -129,27 +129,27 @@ export default class JSCrossword {
   }
 
   // ---- Factories (static) ----
-  static readCFP(xmlString) {
+  static readCFP(xmlString, options = {}) {
     const { metadata, cells, words, clues } = xw_read_cfp(xmlString);
     return new JSCrossword(metadata, cells, words, clues);
   }
 
-  static readJPZ(data) {
+  static readJPZ(data, options = {}) {
     const { metadata, cells, words, clues } = xw_read_jpz(data);
     return new JSCrossword(metadata, cells, words, clues);
   }
 
-  static readPUZ(data) {
-    const { metadata, cells, words, clues } = xw_read_puz(data);
+  static readPUZ(data, options = {}) {
+    const { metadata, cells, words, clues } = xw_read_puz(data, options);
     return new JSCrossword(metadata, cells, words, clues);
   }
 
-  static readIPUZ(data) {
+  static readIPUZ(data, options = {}) {
     const { metadata, cells, words, clues } = xw_read_ipuz(data);
     return new JSCrossword(metadata, cells, words, clues);
   }
 
-  static readRG(data) {
+  static readRG(data, options = {}) {
     const { metadata, cells, words, clues } = xw_read_rg(data);
     return new JSCrossword(metadata, cells, words, clues);
   }
@@ -162,11 +162,46 @@ export default class JSCrossword {
     JSCrossword.readRG
   ];
 
-  static fromData(data) {
+  /**
+   * Attempt to parse `data` with the available readers and return a JSCrossword.
+   *
+   * The `options` object is forwarded to each reader (readPUZ, readJPZ, readIPUZ, etc.)
+   * so format-specific readers can take appropriate actions (for example, how to
+   * handle locked PUZ files).
+   *
+   * Supported options:
+   * @param {Object} options
+   * @param {"allow"|"mask"|"bruteforce"} [options.lockedHandling="allow"]
+   *        How to treat locked PUZ files:
+   *          - "allow"      : return parsed data as-is (may contain scrambled letters).
+   *          - "mask"       : replace all solution letters with `maskChar` and set metadata.locked = true.
+   *          - "bruteforce" : attempt to recover real solutions (descrambler or solver). May time out/fail.
+   *
+   * @param {string} [options.maskChar="X"]
+   *        Character used when lockedHandling === "mask".
+   *
+   * @param {number} [options.maxBruteForceTimeMs=30000]
+   *        Time budget (ms) for any brute-force/solver-based unlock attempts.
+   *
+   * Notes:
+   *  - All keys in `options` are forwarded unchanged to the reader functions
+   *    (e.g., `xw_read_puz(data, options)`), so readers may accept additional
+   *    format-specific options beyond those documented here.
+   *  - On success, the returned JSCrossword will have metadata.locked and
+   *    metadata.lockedHandling set when applicable so callers can inspect what
+   *    action (if any) was taken.
+   *
+   * Example:
+   *   const js = JSCrossword.fromData(buffer, {
+   *     lockedHandling: "mask",
+   *     maskChar: "?",
+   *   });
+   */
+  static fromData(data, options = {}) {
     const errors = [];
     for (const reader of JSCrossword.READERS) {
       try {
-        const js = reader(data);
+        const js = reader(data, options);
         js.set_check_reveal();
         return js;
       } catch (err) {

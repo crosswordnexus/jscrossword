@@ -26,5 +26,5 @@ logs
 coverage/
 test_output/
 
-# All html files
-*.html
+# stats.html
+stats.html

@@ -261,13 +261,16 @@ export class Puzzle {
 
   // ----- Loading -----
 
-  static load(bytes) {
+  static load(bytes, options = {}) {
     const p = new Puzzle();
-    p.load(bytes);
+    p.load(bytes, options);
     return p;
   }
 
-  load(bytes) {
+  load(bytes, options = {}) {
+
+    const { lockedHandling = "allow", maskChar = "X" } = options;
+
     const cur = new Cursor(bytes);
 
     // Seek to ACROSS&DOWN (with -2 offset in Python). Here we seek and then step back 2 if possible.
@@ -312,6 +315,18 @@ export class Puzzle {
     this.solution = decodeBytes(cur.slice(gridCells), this.encoding);
     this.fill = decodeBytes(cur.slice(gridCells), this.encoding);
 
+    // deal with locked puzzles
+    if (this.solution_state !== SolutionState.Unlocked) {
+      if (lockedHandling === "mask") {
+        this.solution = this.solution.replace(/[^\:\.\-]/g, maskChar);
+      } else if (lockedHandling === "bruteforce") {
+        // attempt to brute-force unlock
+        this.bruteForceUnlock();
+      } else { // the default is to keep as-is
+        // keep scrambled solution as-is (default)
+      }
+    }
+
     this.title = cur.readCString(this.encoding);
     this.author = cur.readCString(this.encoding);
     this.copyright = cur.readCString(this.encoding);
@@ -340,7 +355,8 @@ export class Puzzle {
 
     if (cur.canRead(1)) this.postscript = cur.slice(cur.bytes.length - cur.pos);
 
-    // Validate checksums
+    // Don't bother validating checksums
+    /**
     if (cksum_gbl !== this.globalCksum()) throw new PuzzleFormatError('global checksum does not match');
     if (cksum_hdr !== this.headerCksum()) throw new PuzzleFormatError('header checksum does not match');
     //if (cksum_magic !== this.magicCksum()) throw new PuzzleFormatError('magic checksum does not match');
@@ -348,6 +364,7 @@ export class Puzzle {
       const got = dataCksum(this.extensions.get(code));
       if (got !== expected) throw new PuzzleFormatError(`extension ${code} checksum does not match`);
     }
+    **/
   }
 
   // ----- Saving -----
@@ -460,6 +477,22 @@ export class Puzzle {
     this.scrambled_cksum = 0;
     this.solution_state = SolutionState.Unlocked;
     return true;
+  }
+
+  /**
+  * Attempt a brute-force unlock
+  * Note that this won't always work as written
+  * TODO: make it always work
+  **/
+  bruteForceUnlock() {
+    if (!this.isSolutionLocked()) return true;
+    for (var key = 1000; key < 10000; key++) {
+      if (this.unlockSolution(key)) {
+        console.log(`Solution unlocked with key ${key}`);
+        return true;
+      }
+    }
+    return false;
   }
 
   lockSolution(key) {
@@ -1037,7 +1070,7 @@ export function loadText(str) {
 // If not already in scope, import xwGrid from your grid.js
 // import { xwGrid } from "./grid.js";
 
-function jscrossword_from_puz(puzzle) {
+function jscrossword_from_puz(puzzle, options) {
   const {
     width,
     height,
@@ -1168,7 +1201,7 @@ function jscrossword_from_puz(puzzle) {
 }
 
 
-export function xw_read_puz(data) {
+export function xw_read_puz(data, options = {}) {
   let bytes;
 
   if (data instanceof Uint8Array) {
@@ -1179,8 +1212,8 @@ export function xw_read_puz(data) {
     throw new Error("Unsupported input to xw_read_puz: must be Uint8Array or ArrayBuffer");
   }
 
-  const puzzle = Puzzle.load(bytes);
-  return jscrossword_from_puz(puzzle);
+  const puzzle = Puzzle.load(bytes, options);
+  return jscrossword_from_puz(puzzle, options);
 }
 
 
