@@ -87,12 +87,11 @@ export function xw_read_ipuz(inputData) {
         else if (raw) solution = (raw.value || raw.cell || '').toUpperCase();
       } catch {}
 
+      // Set the "type"
+      // We prioritize void over block
       let type = null;
-      if (solution === BLOCK || number === BLOCK) {
-          type = 'block';
-      } else if (data['puzzle'][y][x] === null) {
-          type = 'void';
-      }
+      if (is_void) type = 'void';
+      else if (solution === BLOCK || number === BLOCK) type = 'block';
 
       const letter = cellData?.value || null;
 
