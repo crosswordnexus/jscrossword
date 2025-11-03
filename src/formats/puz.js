@@ -1090,7 +1090,7 @@ function jscrossword_from_puz(puzzle, options) {
     description: notes || "",
     height,
     width,
-    crossword_type: "crossword",
+    crossword_type: (puzzle.puzzletype === PuzzleType.Diagramless ? "diagramless": "crossword"),
   };
 
   // --- build cells (x,y, solution/value/type) ---
