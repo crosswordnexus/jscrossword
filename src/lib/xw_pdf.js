@@ -1,5 +1,4 @@
 import jsPDF from "jspdf/dist/jspdf.es.min.js";
-import GraphemeSplitter from "grapheme-splitter";
 import twemoji from "twemoji";
 import { DOMParserImpl } from "../lib/xmlparser.js";
 
@@ -14,7 +13,6 @@ const DEFAULT_NUM = '•'
 
 const emojiImageCache = new Map();
 const emojiRx = /\p{Extended_Pictographic}(?:\p{Emoji_Modifier})?/u;
-const splitter = new GraphemeSplitter();
 
 const PARSER = new DOMParserImpl();
 
@@ -24,6 +22,16 @@ function safeHtmlText(html) {
   const doc = PARSER.parseFromString(`<div>${html}</div>`, "text/html");
   return doc.documentElement?.textContent || "";
 }
+
+// --- Lightweight GraphemeSplitter replacement using Intl.Segmenter ---
+const splitGraphemes = (str) => {
+  if (typeof Intl !== "undefined" && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+    return [...segmenter.segment(str)].map(s => s.segment);
+  }
+  // Fallback: not perfect for emoji with skin tones/ZWJ, but safe
+  return Array.from(str);
+};
 
 /** Helper function to sanitize Unicode for jsPDF-safe output **/
 function foldReplacing(str, fallback = '*') {
@@ -106,7 +114,7 @@ async function preloadEmojiImages(charList) {
 /** Wrapper for the above function **/
 async function preloadFromClueArrays(clueArrays) {
   const flatText = clueArrays.flat().join("\n");
-  const graphemes = splitter.splitGraphemes(flatText);
+  const graphemes = splitGraphemes(flatText);
   const emojiChars = [...new Set(graphemes.filter(g => emojiRx.test(g)))];
   await preloadEmojiImages(emojiChars);
 }
@@ -120,7 +128,7 @@ function traverseTree(htmlDoc, agg = []) {
     const is_italic = thisTag === "I";
 
     const text = htmlDoc.nodeValue || "";
-    const graphemes = splitter.splitGraphemes(text);
+    const graphemes = splitGraphemes(text);
 
     graphemes.forEach(char => {
       agg.push({
@@ -215,7 +223,7 @@ function split_text_to_size_bi(
   // --- Emoji only ---
   if (!containsBold && !containsItalic && containsEmoji) {
     let lines = doc.splitTextToSize(clean_clue, col_width).map(line =>
-      splitter.splitGraphemes(line).map(char => ({
+      splitGraphemes(line).map(char => ({
         char,
         is_bold: false,
         is_italic: false,
