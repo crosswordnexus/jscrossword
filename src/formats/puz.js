@@ -1080,7 +1080,8 @@ function jscrossword_from_puz(puzzle, options) {
     notes,
     solution,
     fill,
-    clues = []
+    clues = [],
+    extensions = {},
   } = puzzle;
 
   const metadata = {
@@ -1102,6 +1103,8 @@ function jscrossword_from_puz(puzzle, options) {
       const fillChar = fill[idx];
       const isBlock = sol === puzzle.blacksquare();
 
+      const hasCircle = (extensions.get('GEXT') || {})[idx] == GridMarkup.Circled;
+
       cells.push({
         x,
         y,
@@ -1109,6 +1112,7 @@ function jscrossword_from_puz(puzzle, options) {
         number: null,
         type: isBlock ? "block" : null,
         value: isBlock ? null : (fillChar && fillChar !== "-" ? fillChar : null),
+        "background-shape": hasCircle ? "circle" : null,
       });
     }
   }
