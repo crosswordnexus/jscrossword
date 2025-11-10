@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "JSCrossword",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "JavaScript crossword toolkit for reading/writing PUZ, JPZ, iPUZ, and CFP formats",
   "main": "dist/jscrossword_combined.js",
   "scripts": {
@@ -37,7 +37,6 @@
   "dependencies": {
     "dompurify": "^3.2.7",
     "fflate": "^0.8.2",
-    "grapheme-splitter": "^1.0.4",
     "image-size": "^2.0.2",
     "js-yaml": "^4.1.0",
     "jspdf": "^3.0.3",
