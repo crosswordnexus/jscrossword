@@ -1099,7 +1099,13 @@ function jscrossword_from_puz(puzzle, options) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const idx = y * width + x;
-      const sol = solution[idx];
+
+      let sol = solution[idx];
+      // replace with rebus solution if appropriate
+      if (puzzle.rebus().hasRebus() && puzzle.rebus().getRebusSolution(idx)) {
+        sol = puzzle.rebus().getRebusSolution(idx);
+      }
+
       const fillChar = fill[idx];
       const isBlock = sol === puzzle.blacksquare();
 
