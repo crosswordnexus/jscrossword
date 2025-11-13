@@ -242,8 +242,8 @@ export function xw_write_ipuz(metadata, cells, words, clues) {
 
   // ❌ IPUZ doesn't support acrostic-type puzzles
   if (metadata.crossword_type === "acrostic") {
-    console.error("Cannot export acrostic puzzles to IPUZ format.");
-    return {};
+    console.error("Cannot export acrostic puzzles to iPuz format.");
+    return "{}";
   }
 
   const j = {
