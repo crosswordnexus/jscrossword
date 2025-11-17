@@ -300,11 +300,16 @@ export function xw_write_ipuz(metadata, cells, words, clues) {
       }
 
       // puzzle cell
-      let thisCell = cell.number ? {
-        cell: cell.number
-      } : {
-        cell: "_"
-      };
+      let thisCell = {};
+      if (cell.number) {
+        thisCell = {cell: cell.number};
+      } else if (cell.type === 'block') {
+        thisCell = {cell: '#'};
+      } else {
+        thisCell = {cell: '_'};
+      }
+
+      // cell style
       let style = {};
 
       if (cell['background-shape'] === 'circle') {
