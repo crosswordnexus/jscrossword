@@ -293,7 +293,7 @@ export function xw_write_ipuz(metadata, cells, words, clues) {
     const solutionRow = [];
     for (let x1 = 0; x1 < metadata.width; x1++) {
       const cell = cells.find(z => z.x === x1 && z.y === y1);
-      if (cell.is_void) {
+      if ( !cell || cell.is_void) {
         row.push(null);
         solutionRow.push(null);
         continue;
