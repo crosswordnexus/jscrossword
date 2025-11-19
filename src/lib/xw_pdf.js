@@ -213,8 +213,8 @@ function split_text_to_size_bi(
   const containsItalic = clue.toUpperCase().includes("<I");
   const containsEmoji = emojiRx.test(clean_clue);
 
-  // --- Fast path: no markup, no emoji ---
-  if (!containsBold && !containsItalic && !containsEmoji) {
+  // --- Fast path: no markup, no emoji, no hyphens
+  if (!containsBold && !containsItalic && !containsEmoji && !clean_clue.includes("-") ) {
     let lines = doc.splitTextToSize(clean_clue, col_width);
     if (has_header) lines = [header_line].concat(lines);
     return lines;
@@ -241,7 +241,7 @@ function split_text_to_size_bi(
     doc.setFont(font_type, "normal");
 
     let ctr = 0;
-    const SPLIT_CHARS = new Set([" ", "\t", "\n"]);
+    const SPLIT_CHARS = new Set([" ", "\t", "\n", "-"]);
     const lines = wrapped.map(line => {
       const thisLine = [];
       for (let i = 0; i < line.length; i++) {
@@ -275,7 +275,7 @@ function split_text_to_size_bi(
         indices.push(i);
         i++;
       }
-      acc.split(/(\s+)/).forEach(word => {
+      acc.split(/([\-\s]+)/).forEach(word => {
         if (word) {
           measured_chunks.push(word);
           chunk_map.push(indices.splice(0, word.length));
