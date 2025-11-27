@@ -321,6 +321,9 @@ export function xw_write_ipuz(metadata, cells, words, clues) {
       if (cell['background-color']) {
         style.color = cell['background-color'].replace('#', '');
       }
+      if (cell.image) {
+        style.imagebg = cell.image;
+      }
       if (cell['top_right_number']) {
         style.mark = {
           TR: cell['top_right_number']
