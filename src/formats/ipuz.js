@@ -122,9 +122,7 @@ export function xw_read_ipuz(inputData) {
           number = null;
       }
 
-      const image = typeof cellData === 'object' && cellData !== null
-        ? cellData.imagebg || null
-        : null;
+      const image = style.imagebg || null;
 
       cells.push({
         x,

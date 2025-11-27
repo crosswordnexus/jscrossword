@@ -26,7 +26,31 @@
             <grid width="3" height="3">
                 <cell x="1" y="1" solution="S" number="1">
                   <background-picture format="PNG">
-                        <encoded-image>iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAXAAAAFwBhyfMcAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAADKSURBVHjaY2QgDYgD8Qog1gPiDiDuZiRBMysQnwNiHSSxcmINEAHij0AcBsQLgZgZKv6RGAPEgHgfEN8E4gg0Qw4QMgCmWRvKXwc1JBCI64DYlZEEzQxohoDAb1wGSEA1a2KRuw7EdkD8BsTBZgAumxmg4eAIxM9hAoyUaEY3gGTNyAaQpRlmACiFXQBiLRwBBtL8Ekdggw2wAuKjpNqMbEAVELeSoxlmwA4gdkcSuwbETvicjW7AXSC+DcQHgfgAEJ8G4j/EaAYBAARXME8TnppoAAAAAElFTkSuQmCC</encoded-image>
+                        <encoded-image>iVBORw0KGgoAAAANSUhEUgAAAGQAAABlCAIAAAA03NGmAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAT0SURBVHhe7V1NSFRRFH7vjYVBkIsgyYVRkGGg
+RkRJNNWiImKSIBJcJC0qiKBoYZuYyKBFi4gWQUFCQYQRuCuinVFEYGSQFCG0EQwKXARJOmNnfOOb
+O+/vnnPngb1z5q1E733zzve+891zzj3XsZ3rcxbxal5t3Trg9I0U3Xk39juXdzvEe6RyuImR07+t
+O+8XPHOFIAX2xoJVAcRPhHdT5b9taLJTSRKjh44FC4HDQDdikNGT/YeTnKZG86fKZ52z200c2fwj
+l3UmgGVIDYDpalYQUiXN+j4TrUyB19i1roxsY4OV3yMLKZ3AV4OlajnQCgIIaReNHR9/lGgItBro
+pk3kAavW5oqTeg4rk1YYN/TLv1haYcCqciBX1wWqlYuCjc8Nh3JOf6fWbXmoU7gVBOOFI0VjlpYz
+4J5DucyhTYZRrvb+yz6AwCzts0I14tyLct1GOziNAwyrDmk0tfZnNqw67GqxL+wMmcu7CEFYDTFv
+pnClATMspWOS1Cz2hcAkweppY7sOuq6QmMBLSIOiwYIMWkeUnjbHi6ogZGWfBkWDpUMKqNTfYX39
+VRbr3nbdhJSquvLYyayGwKmpi5zXQYRmobkgpBaYwGoIezyhASoa6tQMrBUsUXs8NYElbY8nABZh
+Y8wC72MfLqgaEQALHQBsWWtL2zo0d8MHOQfcUNSlgIXmFAAEPVlQpRGFVHVuiFOrfa322OmMnJ6s
+WM2KZQv43eNjGa/jQTCzEKYDWEeeFF5O4kiIuGG6htAEfmbWgnaHvhGheNHAcokAkPHexYniuwlY
+cC9oEnk4znnXKxQvGlhqU+Tga3HKpYCFsH18GjEoXaJNeVpaUOp1dFM+gs9YmhuqdpOaUXkARgZL
+VJnB947JYEH3h9iLDJa0SoN5bggzZ+fL09lv1gcdiMws7xZntkku0VCkCE78dDXXwcJBBunhzbf1
+dAcHFsj8yQ5xzNJv39u2taAkObzb1eKpohf41jXiGEQr0Rxvr4CopjUCwwV9nPVsIly8effXauVa
+74beLWBXFbrXtHdkPEAv8KHGQzoN29GiDkgDDoZMcQ9TXBuVFWoZMstHN/andlx7TZgFESnol4oX
++1M75mBB4eHLT4nFeBNmhUq+hKiiVs2CPpET7aWQQkK5GQuW5JTQ86TE3JBxLFoHy+TlYpklts1I
+n0gHYYc2o0uvipL3wQATrMC78JUON3U6cKZpb6vEIhcNrBhHl5DxYDVLq4cSMp7EwNKiyWBAYmAt
+nuNhLmTmmgUpTj5ri2rzVsECXuhrCQIx8gSEwCzJMLl4+cAKJxfU2u8eTkzd0qv0PgiW/j9BtTve
+GyvmhmWV20PfaJAvizgFlrXn34r19JDgXGJPoWAEPm5xlLlvSFgNhSeGhlthQdQkJIYEsFZmSvWZ
+mAuabdivAFiB/1uo9ClHQca+cRILljaSlNA4WavAy/lqFIJmRTFrtqDlHJ8BWDdctSLc5sHRIiRD
+fPCItQQL1p85a8f6ShKklrGeTugLOzzQxIIF1nYufYEF/PzmVKZ3a2ku6PrBjcwLpIh0J5jtKL+R
+2foQzaygbym/kaNTqoAQ3FCd9uiTFJ1KACw4Wd5ye559fuNblwyZBXeB5Jl9fpMYWBLyGx9YtHQH
+zu5Mns/wCJoMrKC5IdRhQKqGP0sJ2Wt1Q5Cq+x8kLoWGifTRzVJCdh+z/gFgMSDBwbFwgwAAAABJ
+RU5ErkJggg==</encoded-image>
                     </background-picture>
                 </cell>
                 <cell x="1" y="2" solution="H" number="4"/>
