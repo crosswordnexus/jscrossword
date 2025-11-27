@@ -1,0 +1,99 @@
+{
+  "version": "http://ipuz.org/v1",
+  "kind": [
+    "http://ipuz.org/crossword#1"
+  ],
+  "title": "3x",
+  "copyright": "© 2025 Crossword Nexus. CC BY 4.0 License.",
+  "author": "Alex Boisvert",
+  "notes": "",
+  "dimensions": {
+    "height": 3,
+    "width": 3
+  },
+  "block": "#",
+  "empty": 0,
+  "puzzle": [
+    [
+      {
+        "cell": 1
+      , "imagebg": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAXAAAAFwBhyfMcAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAADKSURBVHjaY2QgDYgD8Qog1gPiDiDuZiRBMysQnwNiHSSxcmINEAHij0AcBsQLgZgZKv6RGAPEgHgfEN8E4gg0Qw4QMgCmWRvKXwc1JBCI64DYlZEEzQxohoDAb1wGSEA1a2KRuw7EdkD8BsTBZgAumxmg4eAIxM9hAoyUaEY3gGTNyAaQpRlmACiFXQBiLRwBBtL8Ekdggw2wAuKjpNqMbEAVELeSoxlmwA4gdkcSuwbETvicjW7AXSC+DcQHgfgAEJ8G4j/EaAYBAARXME8TnppoAAAAAElFTkSuQmCC"
+      },
+      {
+        "cell": 2
+      },
+      {
+        "cell": 3
+      }
+    ],
+    [
+      {
+        "cell": 4
+      },
+      {
+        "cell": 0
+      },
+      {
+        "cell": 0
+      }
+    ],
+    [
+      {
+        "cell": 5
+      },
+      {
+        "cell": 0
+      },
+      {
+        "cell": 0
+      }
+    ]
+  ],
+  "solution": [
+    [
+      "S",
+      "P",
+      "A"
+    ],
+    [
+      "H",
+      "A",
+      "D"
+    ],
+    [
+      "E",
+      "N",
+      "D"
+    ]
+  ],
+  "clues": {
+    "Across": [
+      [
+        1,
+        ""
+      ],
+      [
+        4,
+        ""
+      ],
+      [
+        5,
+        ""
+      ]
+    ],
+    "Down": [
+      [
+        1,
+        ""
+      ],
+      [
+        2,
+        ""
+      ],
+      [
+        3,
+        ""
+      ]
+    ]
+  }
+}
