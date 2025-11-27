@@ -122,6 +122,10 @@ export function xw_read_ipuz(inputData) {
           number = null;
       }
 
+      const image = typeof cellData === 'object' && cellData !== null
+        ? cellData.imagebg || null
+        : null;
+
       cells.push({
         x,
         y,
@@ -135,6 +139,7 @@ export function xw_read_ipuz(inputData) {
         is_void,
         clue: null,
         value: null,
+        image,
         ...bars
       });
     }

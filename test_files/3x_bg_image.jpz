@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<crossword-compiler-applet
+    xmlns="http://crossword.info/xml/crossword-compiler">
+    <applet-settings cursor-color="#ffff00" selected-cells-color="#00ff00">
+        <actions buttons-layout="left">
+            <reveal-word label="Reveal Word"/>
+            <reveal-letter label="Reveal Letter"/>
+            <check label="Check"/>
+            <solution label="Solution"/>
+            <pencil label="Pencil"/>
+        </actions>
+        <completion only-if-correct="true">Congratulations, you&#x2019;ve solved the puzzle!</completion>
+    </applet-settings>
+    <rectangular-puzzle
+        xmlns="http://crossword.info/xml/rectangular-puzzle">
+        <metadata>
+            <creator>Alex Boisvert</creator>
+            <completion>Congratulations, you&#x2019;ve solved the puzzle!</completion>
+            <copyright>&#xA9; 2025 Crossword Nexus. CC BY 4.0 License.</copyright>
+            <description/>
+            <created_at>2025-11-26</created_at>
+            <title>3x</title>
+            <type>crossword</type>
+        </metadata>
+        <crossword>
+            <grid width="3" height="3">
+                <cell x="1" y="1" solution="S" number="1">
+                  <background-picture format="PNG">
+                        <encoded-image>iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAXAAAAFwBhyfMcAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAADKSURBVHjaY2QgDYgD8Qog1gPiDiDuZiRBMysQnwNiHSSxcmINEAHij0AcBsQLgZgZKv6RGAPEgHgfEN8E4gg0Qw4QMgCmWRvKXwc1JBCI64DYlZEEzQxohoDAb1wGSEA1a2KRuw7EdkD8BsTBZgAumxmg4eAIxM9hAoyUaEY3gGTNyAaQpRlmACiFXQBiLRwBBtL8Ekdggw2wAuKjpNqMbEAVELeSoxlmwA4gdkcSuwbETvicjW7AXSC+DcQHgfgAEJ8G4j/EaAYBAARXME8TnppoAAAAAElFTkSuQmCC</encoded-image>
+                    </background-picture>
+                </cell>
+                <cell x="1" y="2" solution="H" number="4"/>
+                <cell x="1" y="3" solution="E" number="5"/>
+                <cell x="2" y="1" solution="P" number="2"/>
+                <cell x="2" y="2" solution="A"/>
+                <cell x="2" y="3" solution="N"/>
+                <cell x="3" y="1" solution="A" number="3"/>
+                <cell x="3" y="2" solution="D"/>
+                <cell x="3" y="3" solution="D"/>
+            </grid>
+            <word id="1">
+                <cells x="1" y="1"/>
+                <cells x="2" y="1"/>
+                <cells x="3" y="1"/>
+            </word>
+            <word id="2">
+                <cells x="1" y="2"/>
+                <cells x="2" y="2"/>
+                <cells x="3" y="2"/>
+            </word>
+            <word id="3">
+                <cells x="1" y="3"/>
+                <cells x="2" y="3"/>
+                <cells x="3" y="3"/>
+            </word>
+            <word id="4">
+                <cells x="1" y="1"/>
+                <cells x="1" y="2"/>
+                <cells x="1" y="3"/>
+            </word>
+            <word id="5">
+                <cells x="2" y="1"/>
+                <cells x="2" y="2"/>
+                <cells x="2" y="3"/>
+            </word>
+            <word id="6">
+                <cells x="3" y="1"/>
+                <cells x="3" y="2"/>
+                <cells x="3" y="3"/>
+            </word>
+            <clues>
+                <title>Across</title>
+                <clue number="1" word="1"/>
+                <clue number="4" word="2"/>
+                <clue number="5" word="3"/>
+            </clues>
+            <clues>
+                <title>Down</title>
+                <clue number="1" word="4"/>
+                <clue number="2" word="5"/>
+                <clue number="3" word="6"/>
+            </clues>
+        </crossword>
+    </rectangular-puzzle>
+</crossword-compiler-applet>

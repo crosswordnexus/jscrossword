@@ -6,6 +6,16 @@ import { unescapeHtmlClue } from "../lib/escape.js";
 * JPZ reading/writing functions
 *******************/
 
+const imageFormatToMime = {
+  bmp: "image/bmp",
+  gif: "image/gif",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  svg: "image/svg+xml",
+};
+
 export function xw_read_jpz(data) {
   const xmlString = maybeUnzipText(data);
 
@@ -67,8 +77,25 @@ export function xw_read_jpz(data) {
       top_right_number: cell.getAttribute("top-right-number"),
       is_void: cell.getAttribute("type") === "void",
       clue: cell.getAttribute("type") === "clue",
-      value: cell.textContent?.trim() || null,
+      value: null,
     };
+
+    const valueClone = cell.cloneNode(true);
+    valueClone.querySelector("background-picture")?.remove();
+    const textValue = valueClone.textContent?.trim() || null;
+    new_cell.value = textValue;
+
+    const bgPicture = cell.querySelector("background-picture");
+    if (bgPicture) {
+      const encoded = bgPicture.querySelector("encoded-image")?.textContent?.trim();
+      if (encoded) {
+        const formatAttr = bgPicture.getAttribute("format")?.toLowerCase();
+        const mimeType = formatAttr
+          ? imageFormatToMime[formatAttr] ?? `image/${formatAttr}`
+          : "image/png";
+        new_cell.image = `data:${mimeType};base64,${encoded}`;
+      }
+    }
 
     if (cell.getAttribute("hint") === "true") {
       new_cell.letter = new_cell.solution;

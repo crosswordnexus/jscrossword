@@ -1,2 +1,3 @@
 # Auto detect text files and perform LF normalization
-* text=auto
+# Force LF in working tree so commits always see LF even on Windows
+* text=auto eol=lf
