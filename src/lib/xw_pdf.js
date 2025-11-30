@@ -16,6 +16,24 @@ const emojiRx = /\p{Extended_Pictographic}(?:\p{Emoji_Modifier})?/u;
 
 const PARSER = new DOMParserImpl();
 
+const clueParseCache = new Map();
+
+const pdfTimingEnabled = (() => {
+  if (typeof process !== "undefined" && process.env?.JSCROSSWORD_PDF_TIMING === '1') {
+    return true;
+  }
+  if (typeof globalThis !== "undefined" && globalThis.__JSCROSSWORD_PDF_TIMING__) {
+    return true;
+  }
+  return false;
+})();
+
+const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+
+function logDocWithCluesTime(label, durationMs) {
+  console.debug(`[xw_pdf timing] ${label}: ${durationMs.toFixed(1)}ms`);
+}
+
 /** Helper function to grab textContent **/
 function safeHtmlText(html) {
   if (!html) return "";
@@ -32,6 +50,18 @@ const splitGraphemes = (str) => {
   // Fallback: not perfect for emoji with skin tones/ZWJ, but safe
   return Array.from(str);
 };
+
+function parseClueMarkup(clue) {
+  if (clueParseCache.has(clue)) {
+    return clueParseCache.get(clue);
+  }
+  const htmlDoc = PARSER.parseFromString(clue, "text/html");
+  const clean_clue = safeHtmlText(clue);
+  const split_clue = traverseTree(htmlDoc);
+  const parsed = { clean_clue, split_clue };
+  clueParseCache.set(clue, parsed);
+  return parsed;
+}
 
 /** Helper function to sanitize Unicode for jsPDF-safe output **/
 function foldReplacing(str, fallback = '*') {
@@ -204,9 +234,7 @@ function split_text_to_size_bi(
   }
 
   // --- Parse clue into DOM + plain text ---
-  const htmlDoc = PARSER.parseFromString(clue, "text/html");
-  let clean_clue = safeHtmlText(clue);
-  const split_clue = traverseTree(htmlDoc); // array of {char, is_bold, is_italic, is_emoji}
+  const { clean_clue, split_clue } = parseClueMarkup(clue);
 
   // --- Quick checks ---
   const containsBold = clue.toUpperCase().includes("<B");
@@ -979,7 +1007,11 @@ async function jscrossword_to_pdf2(xw, options = {}) {
       options.num_columns = pc.num_columns;
       options.num_full_columns = pc.num_full_columns;
       var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
+      const start = pdfTimingEnabled ? now() : 0;
       docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps, columnsPreSet);
+      if (pdfTimingEnabled) {
+        logDocWithCluesTime(`doc_with_clues ${pc.num_columns}/${pc.num_full_columns}`, now() - start);
+      }
       if (docObj.clue_pt) {
         possibleDocs.push({
           docObj: docObj,
@@ -990,7 +1022,11 @@ async function jscrossword_to_pdf2(xw, options = {}) {
     });
   } else {
     var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
+    const start = pdfTimingEnabled ? now() : 0;
     docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps);
+    if (pdfTimingEnabled) {
+      logDocWithCluesTime("doc_with_clues (no clues)", now() - start);
+    }
     possibleDocs.push({
       docObj: docObj,
       gridProps: gridProps,
@@ -1005,7 +1041,11 @@ async function jscrossword_to_pdf2(xw, options = {}) {
     options.num_full_columns = numCols;
     options.num_pages = 2;
     var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
+    const start = pdfTimingEnabled ? now() : 0;
     docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps);
+    if (pdfTimingEnabled) {
+      logDocWithCluesTime("doc_with_clues (two pages)", now() - start);
+    }
     var pc = {
       num_columns: numCols,
       num_full_columns: numCols
