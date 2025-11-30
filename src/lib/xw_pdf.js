@@ -16,7 +16,7 @@ const emojiRx = /\p{Extended_Pictographic}(?:\p{Emoji_Modifier})?/u;
 
 const PARSER = new DOMParserImpl();
 
-const clueParseCache = new Map();
+const clueParseCache = new Map(); // reuse DOM parses across layout attempts
 
 const pdfTimingEnabled = (() => {
   if (typeof process !== "undefined" && process.env?.JSCROSSWORD_PDF_TIMING === '1') {
@@ -51,6 +51,7 @@ const splitGraphemes = (str) => {
   return Array.from(str);
 };
 
+// Cache the DOM parse / grapheme extraction so repeated measurements reuse the same arrays
 function parseClueMarkup(clue) {
   if (clueParseCache.has(clue)) {
     return clueParseCache.get(clue);
@@ -1001,41 +1002,101 @@ async function jscrossword_to_pdf2(xw, options = {}) {
   // Find an appropriate font size
   // don't do this if there are no clues
   doc = new jsPDF(options.orientation, 'pt', 'letter');
-  var possibleDocs = [];
+  const ideal_clue_pt = 12.5;
+  const ideal_cell_size = (options.max_cell_size + options.min_cell_size) / 2.5;
+  let ideal_grid_area = ideal_cell_size * ideal_cell_size * xw_height * xw_width;
+  if (ideal_grid_area < DOC_WIDTH * DOC_HEIGHT * 0.25) {
+    ideal_grid_area = DOC_WIDTH * DOC_HEIGHT * 0.25;
+  } else if (ideal_grid_area > DOC_WIDTH * DOC_HEIGHT * 0.4) {
+    ideal_grid_area = DOC_WIDTH * DOC_HEIGHT * 0.4;
+  }
+  const maxClueChars = Math.max(1, clue_length);
+  let selectedDoc = null;
   if (xw.clues.length) {
+    // Score each layout candidate using the estimated clue-point + grid area so we only render the most promising ones.
+    const candidates = [];
     possibleColumns.forEach(function(pc) {
       options.num_columns = pc.num_columns;
       options.num_full_columns = pc.num_full_columns;
       var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
+      var columnWidth = (DOC_WIDTH - 2 * options.margin - (pc.num_columns - 1) * options.column_padding) / pc.num_columns;
+      var fullColumnHeight = DOC_HEIGHT - options.margin - options.max_title_pt - 2 * options.vertical_separator;
+      if (fullColumnHeight < 0) fullColumnHeight = 0;
+      var partialColumnHeight = Math.max(0, gridProps.grid_ypos - options.grid_padding);
+      var fullColumns = pc.num_full_columns;
+      var partialColumns = Math.max(0, pc.num_columns - fullColumns);
+      // available clue area equals column width times how many lines of text each column can hold
+      var availableArea = columnWidth * (fullColumns * fullColumnHeight + partialColumns * partialColumnHeight);
+      var areaPerChar = availableArea / maxClueChars;
+      let estimatedCluePt = Math.max(options.min_clue_pt, Math.min(options.max_clue_pt, 0.0272 * areaPerChar + 6.21));
+      const thisGridArea = gridProps.grid_width * gridProps.grid_height;
+      var thisVal = ((thisGridArea - ideal_grid_area) / ideal_grid_area) ** 2 + ((estimatedCluePt - ideal_clue_pt) / ideal_clue_pt) ** 2;
+      if (pc.num_columns) {
+        thisVal += pc.num_columns / 500;
+      }
+      candidates.push({
+        pc,
+        gridProps,
+        estimatedCluePt,
+        thisVal
+      });
+    });
+
+    candidates.sort((a, b) => a.thisVal - b.thisVal);
+    const tries = [];
+    const maxDocAttempts = 2; // only render the two most promising layouts
+    for (const candidate of candidates) {
+      options.num_columns = candidate.pc.num_columns;
+      options.num_full_columns = candidate.pc.num_full_columns;
       const start = pdfTimingEnabled ? now() : 0;
-      docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps, columnsPreSet);
+      docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, candidate.gridProps, columnsPreSet);
       if (pdfTimingEnabled) {
-        logDocWithCluesTime(`doc_with_clues ${pc.num_columns}/${pc.num_full_columns}`, now() - start);
+        logDocWithCluesTime(`doc_with_clues ${candidate.pc.num_columns}/${candidate.pc.num_full_columns}`, now() - start);
       }
       if (docObj.clue_pt) {
-        possibleDocs.push({
-          docObj: docObj,
-          gridProps: gridProps,
-          columns: pc
+        if (pdfTimingEnabled) {
+          console.log(
+            `[xw_pdf clue pt] ${candidate.pc.num_columns}/${candidate.pc.num_full_columns}: ` +
+            `estimate ${candidate.estimatedCluePt.toFixed(2)} actual ${docObj.clue_pt.toFixed(2)}`
+          );
+        }
+        const actualGridArea = candidate.gridProps.grid_width * candidate.gridProps.grid_height;
+        let actualVal = ((actualGridArea - ideal_grid_area) / ideal_grid_area) ** 2 +
+          ((docObj.clue_pt - ideal_clue_pt) / ideal_clue_pt) ** 2;
+        if (candidate.pc.num_columns) {
+          actualVal += candidate.pc.num_columns / 500;
+        }
+        tries.push({
+          docObj,
+          gridProps: candidate.gridProps,
+          columns: candidate.pc,
+          actualVal
         });
+        if (tries.length >= maxDocAttempts) {
+          break;
+        }
       }
-    });
+    }
+    if (tries.length) {
+      tries.sort((a, b) => a.actualVal - b.actualVal);
+      selectedDoc = tries[0];
+    }
   } else {
     var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
     const start = pdfTimingEnabled ? now() : 0;
-    docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps);
+    docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps, columnsPreSet);
     if (pdfTimingEnabled) {
       logDocWithCluesTime("doc_with_clues (no clues)", now() - start);
     }
-    possibleDocs.push({
+    selectedDoc = {
       docObj: docObj,
       gridProps: gridProps,
       columns: {}
-    });
+    };
   }
 
   // If there are no possibilities here go to two pages
-  if (possibleDocs.length == 0) {
+  if (!selectedDoc) {
     var numCols = Math.min(Math.ceil(clue_length / 800), 5);
     options.num_columns = numCols;
     options.num_full_columns = numCols;
@@ -1050,45 +1111,12 @@ async function jscrossword_to_pdf2(xw, options = {}) {
       num_columns: numCols,
       num_full_columns: numCols
     };
-    possibleDocs.push({
+    selectedDoc = {
       docObj: docObj,
       gridProps: gridProps,
       columns: pc
-    });
+    };
   }
-
-  // How do we pick from among these options?
-  // we need an objective function
-  // let's say we want things as big as possible?
-  var selectedDoc;
-  var obj_val = 1000.;
-  const ideal_clue_pt = 12.5;
-  const ideal_cell_size = (options.max_cell_size + options.min_cell_size) / 2.5;
-  let ideal_grid_area = ideal_cell_size * ideal_cell_size * xw_height * xw_width;
-  // this should be between 1/4 and 2/5 of the doc size
-  if (ideal_grid_area < DOC_WIDTH * DOC_HEIGHT * 0.25) {
-    ideal_grid_area = DOC_WIDTH * DOC_HEIGHT * 0.25;
-  } else if (ideal_grid_area > DOC_WIDTH * DOC_HEIGHT * 0.4) {
-    ideal_grid_area = DOC_WIDTH * DOC_HEIGHT * 0.4;
-  }
-  possibleDocs.forEach(function(pd) {
-    //var thisVal = pd.gridProps.cell_size/options.max_cell_size + pd.docObj.clue_pt/options.max_clue_pt;
-    //var thisVal = (pd.gridProps.cell_size - ideal_cell_size)**2 + (pd.docObj.clue_pt - ideal_clue_pt)**2;
-
-    var thisGridArea = pd.gridProps.grid_width * pd.gridProps.grid_height;
-
-    // we want the clue point and grid area to be mostly ideal
-    // we add a slight penalty for more columns (in general, less is better if it's close)
-    var thisVal = ((thisGridArea - ideal_grid_area) / ideal_grid_area) ** 2 + ((pd.docObj.clue_pt - ideal_clue_pt) / ideal_clue_pt) ** 2;
-    if (pd.columns.num_columns) {
-      thisVal += pd.columns.num_columns / 500;
-    }
-    //console.log(pd); console.log(thisVal);
-    if (thisVal < obj_val) {
-      obj_val = thisVal;
-      selectedDoc = pd;
-    }
-  });
 
   doc = selectedDoc.docObj.doc;
   var gridProps = selectedDoc.gridProps;
