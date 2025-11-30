@@ -540,133 +540,115 @@ function draw_crossword_grid(doc, xw, options) {
 /**
  * Helper function to make a grid with clues
  **/
-function doc_with_clues(xw, options, doc_width, doc_height, clue_arrays, num_arrays, gridProps, columnsPreSet = false) {
-  var clue_pt = options.max_clue_pt;
-  var finding_font = true;
+function doc_with_clues(xw, options, doc_width, doc_height, clue_arrays, num_arrays, gridProps, columnsPreSet = false, cluePtEstimate = options.max_clue_pt) {
+  const cluePtMin = Math.max(0, options.min_clue_pt - 2);
+  const cluePtMax = options.max_clue_pt + 2;
+  const guessCluePt = Math.min(cluePtMax, Math.max(cluePtMin, cluePtEstimate));
 
   var max_title_author_pt = options.max_title_pt;
+  const col_width = gridProps.col_width;
+  const grid_ypos = gridProps.grid_ypos;
+  const has_top_header_row = (options.header1 || options.header2) ? 1 : 0;
 
-  // extract info from gridProps
-  var col_width = gridProps.col_width;
-  var grid_ypos = gridProps.grid_ypos;
-
-  // If there is no header 1 / header 2 we can save some space
-  var has_top_header_row = 1;
-  if (!options.header1 && !options.header2) {
-    has_top_header_row = 0;
-  }
-
-  var doc = new jsPDF(options.orientation, 'pt', 'letter');
-  if (!xw.clues.length) {
-    return {
-      doc: doc,
-      clue_pt: 1
-    };
-  }
-
-  while (finding_font) {
-    doc = new jsPDF(options.orientation, 'pt', 'letter');
-    var clue_padding = clue_pt / options.clue_padding_denominator;
-    doc.setFontSize(clue_pt);
-
+  const layoutWithCluePt = (testPt) => {
+    const doc = new jsPDF(options.orientation, 'pt', 'letter');
+    const clue_padding = testPt / options.clue_padding_denominator;
+    doc.setFontSize(testPt);
     doc.setLineWidth(options.line_width);
 
-    // Print the clues
-    // We set the margin to be the maximum length of the clue numbers
-    var max_clue_num_length = xw.clues.map(x => x.clue).flat().map(x => x.number).map(x => x.length).reduce((a, b) => Math.max(a, b));
-    var num_margin = doc.getTextWidth('9'.repeat(max_clue_num_length));
-    var num_xpos = options.margin + num_margin;
-    var line_margin = 1.5 * doc.getTextWidth(' ');
-    var line_xpos = num_xpos + line_margin;
-    var top_line_ypos = options.margin + // top margin
-      has_top_header_row * (max_title_author_pt + options.vertical_separator) + // headers 1 & 2
-      max_title_author_pt + // title + header 3
-      options.vertical_separator * 2 + // padding
-      clue_pt + clue_padding; // first clue
-    var line_ypos = top_line_ypos;
-    var my_column = 0;
-    for (var k = 0; k < clue_arrays.length; k++) {
-      var clues = clue_arrays[k];
-      var nums = num_arrays[k];
-      for (var i = 0; i < clues.length; i++) {
-        var clue = clues[i];
-        var num = nums[i];
+    const max_clue_num_length = xw.clues.map(x => x.clue).flat().map(x => x.number).map(x => x.length).reduce((a, b) => Math.max(a, b));
+    const num_margin = doc.getTextWidth('9'.repeat(max_clue_num_length));
+    let num_xpos = options.margin + num_margin;
+    const line_margin = 1.5 * doc.getTextWidth(' ');
+    let line_xpos = num_xpos + line_margin;
+    const top_line_ypos = options.margin +
+      has_top_header_row * (max_title_author_pt + options.vertical_separator) +
+      max_title_author_pt +
+      options.vertical_separator * 2 +
+      testPt + clue_padding;
+    let line_ypos = top_line_ypos;
+    let my_column = 0;
 
-        // check to see if we need to wrap
-        var max_line_ypos;
-        if (my_column < options.num_full_columns) {
-          max_line_ypos = doc_height - options.margin - options.max_title_pt - 2 * options.vertical_separator;
-        } else {
-          max_line_ypos = grid_ypos - options.grid_padding;
-        }
+    for (let k = 0; k < clue_arrays.length; k++) {
+      const clues = clue_arrays[k];
+      const nums = num_arrays[k];
+      for (let i = 0; i < clues.length; i++) {
+        const clue = clues[i];
+        const num = nums[i];
 
-        // Split our clue
-        var lines = split_text_to_size_bi(clue, col_width - (num_margin + line_margin), doc, i == 0, options.font_type);
+        const max_line_ypos = my_column < options.num_full_columns
+          ? doc_height - options.margin - options.max_title_pt - 2 * options.vertical_separator
+          : grid_ypos - options.grid_padding;
 
-        if (line_ypos + (lines.length - 1) * (clue_pt + clue_padding) > max_line_ypos) {
-          // move to new column
+        const lines = split_text_to_size_bi(clue, col_width - (num_margin + line_margin), doc, i == 0, options.font_type);
+
+        if (line_ypos + (lines.length - 1) * (testPt + clue_padding) > max_line_ypos) {
           my_column += 1;
           num_xpos = options.margin + num_margin + my_column * (col_width + options.column_padding);
           line_xpos = num_xpos + line_margin;
           line_ypos = top_line_ypos;
-          // if we're at the top of a line we don't print a blank clue
-          if (clue == '') {
+          if (clue === '') {
             continue;
           }
         }
 
-
-        for (var j = 0; j < lines.length; j++) {
-          var line = lines[j];
-          // Set the font to bold for the title
+        for (let j = 0; j < lines.length; j++) {
+          const line = lines[j];
           if (i == 0 && j == 0) {
             doc.setFont(options.font_type, 'bold');
-            printCharacters(doc, line, line_ypos, line_xpos, clue_pt, options.font_type);
+            printCharacters(doc, line, line_ypos, line_xpos, testPt, options.font_type);
             doc.setFont(options.font_type, 'normal');
-            // add a little space after the header
             line_ypos += clue_padding;
           } else {
             if (j == 0 || (i == 0 && j == 1)) {
-              // When j == 0 we print the number
               doc.setFont(options.font_type, 'bold');
               doc.text(num_xpos, line_ypos, num, null, null, "right");
               doc.setFont(options.font_type, 'normal');
             }
-            // Print the clue
             doc.setFont(options.font_type, 'normal');
-            // print the text
-            //doc.text(line_xpos,line_ypos,line);
-            printCharacters(doc, line, line_ypos, line_xpos, clue_pt, options.font_type);
+            printCharacters(doc, line, line_ypos, line_xpos, testPt, options.font_type);
           }
-          // set the y position for the next line
-          line_ypos += clue_pt + clue_padding;
+          line_ypos += testPt + clue_padding;
         }
-        // Add a little extra space in between clues
         line_ypos += clue_padding;
       }
     }
 
-    // let's not let the font get ridiculously tiny
-    // ignore this option if we have two pages
-    if (clue_pt < options.min_clue_pt && options.num_pages < 2 && !columnsPreSet) {
-      finding_font = false;
-      clue_pt = null;
-    } else if (my_column > options.num_columns - 1) {
-      clue_pt -= 0.1;
-    } else {
-      finding_font = false;
-    }
-  }
+    const too_small = testPt < options.min_clue_pt && options.num_pages < 2 && !columnsPreSet;
+    const overflow = my_column > options.num_columns - 1;
+    let reason = null;
+    if (too_small) reason = 'clue pt below minimum';
+    else if (overflow) reason = 'column overflow';
+    else reason = 'success';
 
-  // if we haven't made it to all the columns we don't progress
-  if (my_column < options.num_columns - 1 && (options.num_columns > options.min_columns || options.num_full_columns > 0)) {
-    clue_pt = null;
-  }
-
-  return {
-    doc: doc,
-    clue_pt: clue_pt
+    return {
+      doc,
+      clue_pt: (!too_small && !overflow) ? testPt : null,
+      success: !too_small && !overflow,
+      reason
+    };
   };
+
+  let bestResult = null;
+  let low = cluePtMin;
+  let high = cluePtMax;
+  let guess = guessCluePt;
+  for (let i = 0; i < 4; i++) {
+    const attempt = layoutWithCluePt(guess);
+    if (attempt.success) {
+      bestResult = attempt;
+      low = guess;
+    } else {
+      high = guess;
+    }
+    guess = (low + high) / 2;
+  }
+
+  if (!bestResult) {
+    bestResult = layoutWithCluePt(low);
+  }
+
+  return bestResult;
 
 }
 
@@ -1012,79 +994,61 @@ async function jscrossword_to_pdf2(xw, options = {}) {
   }
   const maxClueChars = Math.max(1, clue_length);
   let selectedDoc = null;
+  let bestVal = Infinity;
   if (xw.clues.length) {
-    // Score each layout candidate using the estimated clue-point + grid area so we only render the most promising ones.
-    const candidates = [];
     possibleColumns.forEach(function(pc) {
       options.num_columns = pc.num_columns;
       options.num_full_columns = pc.num_full_columns;
-      var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
-      var columnWidth = (DOC_WIDTH - 2 * options.margin - (pc.num_columns - 1) * options.column_padding) / pc.num_columns;
-      var fullColumnHeight = DOC_HEIGHT - options.margin - options.max_title_pt - 2 * options.vertical_separator;
-      if (fullColumnHeight < 0) fullColumnHeight = 0;
-      var partialColumnHeight = Math.max(0, gridProps.grid_ypos - options.grid_padding);
-      var fullColumns = pc.num_full_columns;
-      var partialColumns = Math.max(0, pc.num_columns - fullColumns);
-      // available clue area equals column width times how many lines of text each column can hold
-      var availableArea = columnWidth * (fullColumns * fullColumnHeight + partialColumns * partialColumnHeight);
-      var areaPerChar = availableArea / maxClueChars;
-      let estimatedCluePt = Math.max(options.min_clue_pt, Math.min(options.max_clue_pt, 0.0272 * areaPerChar + 6.21));
-      const thisGridArea = gridProps.grid_width * gridProps.grid_height;
-      var thisVal = ((thisGridArea - ideal_grid_area) / ideal_grid_area) ** 2 + ((estimatedCluePt - ideal_clue_pt) / ideal_clue_pt) ** 2;
-      if (pc.num_columns) {
-        thisVal += pc.num_columns / 500;
+      const gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
+      if (gridProps.cell_size < options.min_cell_size) {
+        if (pdfTimingEnabled) {
+          console.debug(`[xw_pdf skip candidate] ${pc.num_columns}/${pc.num_full_columns}: cell_size ${gridProps.cell_size.toFixed(2)} < min ${options.min_cell_size}`);
+        }
+        return;
       }
-      candidates.push({
-        pc,
-        gridProps,
-        estimatedCluePt,
-        thisVal
-      });
-    });
-
-    candidates.sort((a, b) => a.thisVal - b.thisVal);
-    const tries = [];
-    const maxDocAttempts = 2; // only render the two most promising layouts
-    for (const candidate of candidates) {
-      options.num_columns = candidate.pc.num_columns;
-      options.num_full_columns = candidate.pc.num_full_columns;
+      const columnWidth = (DOC_WIDTH - 2 * options.margin - (pc.num_columns - 1) * options.column_padding) / pc.num_columns;
+      let fullColumnHeight = DOC_HEIGHT - options.margin - options.max_title_pt - 2 * options.vertical_separator;
+      if (fullColumnHeight < 0) fullColumnHeight = 0;
+      const partialColumnHeight = Math.max(0, gridProps.grid_ypos - options.grid_padding);
+      const fullColumns = pc.num_full_columns;
+      const partialColumns = Math.max(0, pc.num_columns - fullColumns);
+      const availableArea = columnWidth * (fullColumns * fullColumnHeight + partialColumns * partialColumnHeight);
+      const areaPerChar = availableArea / maxClueChars;
+      const estimatedCluePt = Math.max(options.min_clue_pt, Math.min(options.max_clue_pt, 0.0272 * areaPerChar + 6.21));
       const start = pdfTimingEnabled ? now() : 0;
-      docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, candidate.gridProps, columnsPreSet);
+      docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps, columnsPreSet, estimatedCluePt);
       if (pdfTimingEnabled) {
-        logDocWithCluesTime(`doc_with_clues ${candidate.pc.num_columns}/${candidate.pc.num_full_columns}`, now() - start);
+        logDocWithCluesTime(`doc_with_clues ${pc.num_columns}/${pc.num_full_columns}`, now() - start);
       }
       if (docObj.clue_pt) {
         if (pdfTimingEnabled) {
           console.log(
-            `[xw_pdf clue pt] ${candidate.pc.num_columns}/${candidate.pc.num_full_columns}: ` +
-            `estimate ${candidate.estimatedCluePt.toFixed(2)} actual ${docObj.clue_pt.toFixed(2)}`
+            `[xw_pdf clue pt] ${pc.num_columns}/${pc.num_full_columns}: ` +
+            `estimate ${estimatedCluePt.toFixed(2)} actual ${docObj.clue_pt.toFixed(2)}`
           );
         }
-        const actualGridArea = candidate.gridProps.grid_width * candidate.gridProps.grid_height;
+        const actualGridArea = gridProps.grid_width * gridProps.grid_height;
         let actualVal = ((actualGridArea - ideal_grid_area) / ideal_grid_area) ** 2 +
           ((docObj.clue_pt - ideal_clue_pt) / ideal_clue_pt) ** 2;
-        if (candidate.pc.num_columns) {
-          actualVal += candidate.pc.num_columns / 500;
+        if (pc.num_columns) {
+          actualVal += pc.num_columns / 500;
         }
-        tries.push({
-          docObj,
-          gridProps: candidate.gridProps,
-          columns: candidate.pc,
-          actualVal
-        });
-        if (tries.length >= maxDocAttempts) {
-          break;
+        if (actualVal < bestVal) {
+          bestVal = actualVal;
+          selectedDoc = {
+            docObj,
+            gridProps,
+            columns: pc
+          };
         }
+      } else if (pdfTimingEnabled) {
+        console.warn(`[xw_pdf layout fail] ${pc.num_columns}/${pc.num_full_columns}: ${docObj.reason}`);
       }
-    }
-    if (tries.length) {
-      tries.sort((a, b) => a.actualVal - b.actualVal);
-      selectedDoc = tries[0];
-    }
+    });
   } else {
     var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
     const start = pdfTimingEnabled ? now() : 0;
-    docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps, columnsPreSet);
+    docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps, columnsPreSet, ideal_clue_pt);
     if (pdfTimingEnabled) {
       logDocWithCluesTime("doc_with_clues (no clues)", now() - start);
     }
@@ -1103,7 +1067,7 @@ async function jscrossword_to_pdf2(xw, options = {}) {
     options.num_pages = 2;
     var gridProps = grid_props(xw, options, DOC_WIDTH, DOC_HEIGHT);
     const start = pdfTimingEnabled ? now() : 0;
-    docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps);
+    docObj = doc_with_clues(xw, options, DOC_WIDTH, DOC_HEIGHT, clue_arrays, num_arrays, gridProps, false, ideal_clue_pt);
     if (pdfTimingEnabled) {
       logDocWithCluesTime("doc_with_clues (two pages)", now() - start);
     }
