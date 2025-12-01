@@ -91,7 +91,10 @@ export function xw_read_ipuz(inputData) {
       // We prioritize void over block
       let type = null;
       if (is_void) type = 'void';
-      else if (solution === BLOCK || number === BLOCK) type = 'block';
+      else if (solution === BLOCK || number === BLOCK) {
+        type = 'block';
+        solution = null;
+      }
 
       const letter = cellData?.value || null;
 
