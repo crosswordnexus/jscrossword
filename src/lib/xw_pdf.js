@@ -633,10 +633,13 @@ function doc_with_clues(xw, options, doc_width, doc_height, clue_arrays, num_arr
   let low = cluePtMin;
   let high = cluePtMax;
   let guess = guessCluePt;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     const attempt = layoutWithCluePt(guess);
     if (attempt.success) {
-      bestResult = attempt;
+      // This attempt is best if it has a bigger font than a previous attempt
+      if (!bestResult || attempt.clue_pt > bestResult.clue_pt) {
+        bestResult = attempt;
+      }
       low = guess;
     } else {
       high = guess;
