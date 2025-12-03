@@ -540,10 +540,10 @@ function draw_crossword_grid(doc, xw, options) {
 /**
  * Helper function to make a grid with clues
  **/
-function doc_with_clues(xw, options, doc_width, doc_height, clue_arrays, num_arrays, gridProps, columnsPreSet = false, cluePtEstimate = options.max_clue_pt) {
-  const cluePtMin = Math.max(0, options.min_clue_pt - 2);
-  const cluePtMax = options.max_clue_pt + 2;
-  const guessCluePt = Math.min(cluePtMax, Math.max(cluePtMin, cluePtEstimate));
+function doc_with_clues(xw, options, doc_width, doc_height, clue_arrays, num_arrays, gridProps, columnsPreSet = false) {
+  const cluePtMin = options.min_clue_pt;
+  const cluePtMax = options.max_clue_pt;
+  const guessCluePt = (cluePtMin + cluePtMax) / 2.0;
 
   var max_title_author_pt = options.max_title_pt;
   const col_width = gridProps.col_width;
