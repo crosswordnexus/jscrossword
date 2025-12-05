@@ -354,6 +354,18 @@ function draw_crossword_grid(doc, xw, options) {
    * xw is a JSCrossword instance
    */
 
+  function parseImageFormat(dataUrl) {
+    if (typeof dataUrl !== "string") {
+      return "PNG";
+    }
+    var match = /^data:image\/([^;]+);base64,/i.exec(dataUrl);
+    if (!match) {
+      return "PNG";
+    }
+    var format = match[1].toUpperCase().split("+")[0];
+    return format === "JPG" ? "JPEG" : format;
+  }
+
   // options are as below
   var DEFAULT_OPTIONS = {
     grid_letters: true,
@@ -375,7 +387,8 @@ function draw_crossword_grid(doc, xw, options) {
 
   // If there's an image, draw it and return
   if (xw.metadata.image) {
-    doc.addImage(xw.metadata.image, "PNG", options.x0, options.y0, xw.metadata.width * options.cell_size, xw.metadata.height * options.cell_size);
+    var imageFormat = parseImageFormat(xw.metadata.image);
+    doc.addImage(xw.metadata.image, imageFormat, options.x0, options.y0, xw.metadata.width * options.cell_size, xw.metadata.height * options.cell_size);
     return;
   }
 
