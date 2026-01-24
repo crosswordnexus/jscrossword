@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "JSCrossword",
-  "version": "2025.12.1",
+  "version": "2026.1.24",
   "description": "JavaScript crossword toolkit for reading/writing PUZ, JPZ, iPUZ, and CFP formats",
   "main": "dist/jscrossword_combined.js",
   "scripts": {
