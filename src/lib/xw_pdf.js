@@ -66,6 +66,12 @@ function parseClueMarkup(clue) {
 
 /** Helper function to sanitize Unicode for jsPDF-safe output **/
 function foldReplacing(str, fallback = '*') {
+  // Quick helpers
+  const isAsciiOrLatin1 = (cp) => (cp <= 0x7F) || (cp >= 0x00A0 && cp <= 0x00FF);
+
+  const stripCombiningMarks = (s) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
   const replacements = {
     // Curly single quotes / apostrophes
     '‘': "'", '’': "'", '‚': ',', '‛': "'",
@@ -73,29 +79,93 @@ function foldReplacing(str, fallback = '*') {
     // Curly double quotes
     '“': '"', '”': '"', '„': '"', '‟': '"',
 
-    // Dashes
-    '–': '-', '—': '-', '−': '-', // en dash, em dash, minus
+    // Dashes / hyphens / minus
+    '–': '-', '—': '-', '−': '-', '‒': '-', '―': '-',
 
     // Ellipsis
     '…': '...',
 
-    // Misc punctuation
-    '•': '*', '◦': '*', '▪': '*', '‒': '-', '―': '-',
+    // Bullets and similar
+    '•': '*', '◦': '*', '▪': '*', '·': '*', '∙': '*',
 
-    // Non-breaking space
-    '\u00A0': ' ',
+    // Spaces
+    '\u00A0': ' ',           // NBSP
+    '\u2009': ' ',           // thin space
+    '\u200A': ' ',           // hair space
+    '\u202F': ' ',           // narrow no-break space
+    '\u200B': '',            // zero-width space
+    '\u2060': '',            // word joiner
 
-    // Trademark-like symbols (optional)
+    // Common symbols that often appear in text
     '©': '(c)', '®': '(R)', '™': '(TM)',
+    '°': ' deg ',            // optional: you may prefer "°" if it renders for you
+    '×': 'x',
+    '÷': '/',
+    '≠': '!=',
+    '≤': '<=',
+    '≥': '>=',
+    '≈': '~',
+    '…': '...',
+
+    // Currency (core fonts usually don’t do € reliably)
+    '€': 'EUR',
+    '£': 'GBP',
+    '¥': 'JPY',
+
+    // Fractions
+    '½': '1/2',
+    '¼': '1/4',
+    '¾': '3/4',
+
+    // Arrows (often unsupported)
+    '→': '->',
+    '←': '<-',
+    '↔': '<->',
+    '⇒': '=>',
+    '⇐': '<=',
+  };
+
+  // Chars that don't decompose the way we want (or decompose to something odd)
+  const specialFold = {
+    'ß': 'ss',
+    'Æ': 'AE', 'æ': 'ae',
+    'Œ': 'OE', 'œ': 'oe',
+    'Ø': 'O',  'ø': 'o',
+    'Đ': 'D',  'đ': 'd',
+    'Ł': 'L',  'ł': 'l',
+    'Þ': 'Th', 'þ': 'th',
+    'İ': 'I',  'ı': 'i',
+    'Ŋ': 'N',  'ŋ': 'n',
   };
 
   return Array.from(str).map(c => {
-    if (emojiRx.test(c)) return c; // preserve emoji
+    if (typeof emojiRx !== 'undefined' && emojiRx.test(c)) return c; // preserve emoji
+
+    // 1) Direct replacements first
     if (replacements[c]) return replacements[c];
-    if (c.charCodeAt(0) <= 256) return c;
+    if (specialFold[c]) return specialFold[c];
+
+    const cp = c.codePointAt(0);
+
+    // 2) Keep ASCII + Latin-1 (é lives here: U+00E9)
+    if (isAsciiOrLatin1(cp)) return c;
+
+    // 3) Try stripping diacritics (Ś -> S). Works for most accented Latin letters.
+    const de = stripCombiningMarks(c);
+    if (de !== c) {
+      // Only keep if result is now ASCII/Latin-1 (sometimes it's still exotic)
+      for (const dch of de) {
+        const dcp = dch.codePointAt(0);
+        if (!isAsciiOrLatin1(dcp)) return fallback;
+      }
+      return de;
+    }
+
+    // 4) Give up
     return fallback;
   }).join('');
 }
+
 
 
 /* Helper function to fetch a data URL */
