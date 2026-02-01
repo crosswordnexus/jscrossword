@@ -10,18 +10,19 @@ import pkg from "../../package.json" assert { type: "json" };
 
 /** Helper function to determine if we're 0- or 1-indexed **/
 function cellOffset(clues, height, width) {
-  let maxCoord = 0;
+  let maxX = 0;
+  let maxY = 0;
   for (const dir of Object.keys(clues)) {
     for (const clue of clues[dir]) {
       if (clue.cells) {
         for (const [x, y] of clue.cells) {
-          if (x > maxCoord) maxCoord = x;
-          if (y > maxCoord) maxCoord = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
         }
       }
     }
   }
-  return maxCoord > width || maxCoord > height ? 0 : 1;
+  return maxX > width || maxY > height ? 0 : 1;
 }
 
 export function xw_read_ipuz(inputData) {
