@@ -137,9 +137,11 @@ function rgToJSCrossword(rgStr, thorny=true) {
   };
 }
 
-export function xw_read_rg(data) {
+export function xw_read_rg(data, options = {}) {
   const rgStr = maybeUnzipText(data); // works for .rg and .rgz
-  return rgToJSCrossword(rgStr, true);
+  // Default to "thorny" if thorny wasn't explicitly passed in
+  let thorny = ("thorny" in options ? options.thorny : true);
+  return rgToJSCrossword(rgStr, thorny);
 }
 
 // Base64 representation of a rows garden puzzle
