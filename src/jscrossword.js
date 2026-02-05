@@ -150,7 +150,7 @@ export default class JSCrossword {
   }
 
   static readRG(data, options = {}) {
-    const { metadata, cells, words, clues } = xw_read_rg(data);
+    const { metadata, cells, words, clues } = xw_read_rg(data, options=options);
     return new JSCrossword(metadata, cells, words, clues);
   }
 
