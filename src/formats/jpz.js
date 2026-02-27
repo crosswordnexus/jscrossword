@@ -43,6 +43,8 @@ export function xw_read_jpz(data) {
     description: md.querySelector("description")?.textContent.trim() || "",
     intro: puzzle.querySelector("instructions")?.textContent.trim() || "",
     fakeclues: !!md.querySelector("fakeclues"),
+    realwords: !!md.querySelector("realwords"),
+    autofill: !!md.querySelector("autofill"),
     crossword_type,
   };
 
@@ -50,7 +52,10 @@ export function xw_read_jpz(data) {
     metadata.description = metadata.intro;
   }
 
-  if (!doc.querySelector("applet-settings solution")) {
+  if (!doc.querySelector("applet-settings")) {
+    metadata.has_reveal = true;
+  }
+  else if (!doc.querySelector("applet-settings solution")) {
     metadata.has_reveal = false;
   }
 
