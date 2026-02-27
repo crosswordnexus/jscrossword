@@ -59,6 +59,8 @@ export function xw_read_ipuz(inputData) {
     width,
     crossword_type,
     fakeclues: data.fakeclues || false,
+    realwords: data.realwords || false,
+    autofill: data.autofill || false,
     word_locations: Boolean(data.words),
     completion_message: data.explanation || null,
     // we add an image for vpuz support
