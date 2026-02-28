@@ -154,6 +154,7 @@ export function xw_read_jpz(data) {
   if (crossword_type !== "coded") {
     crossword.querySelectorAll("clues").forEach(clues_block => {
       const title = clues_block.querySelector("title")?.textContent.trim() || "";
+      const isFake = clues_block.getAttribute("fake") === "true";
       const clueList = Array.from(clues_block.querySelectorAll("clue")).map(clue => {
         let text = clue.innerHTML.trim();
         text = text.replace(/\s+xmlns="[^"]*"/g, "");
@@ -166,7 +167,9 @@ export function xw_read_jpz(data) {
           number: clue.getAttribute("number"),
         };
       });
-      clues.push({ title, clue: clueList });
+      const clueGroup = { title, clue: clueList };
+      if (isFake) clueGroup.fake = true;
+      clues.push(clueGroup);
     });
   }
 

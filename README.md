@@ -222,6 +222,58 @@ Generates a `stats.html` file showing module sizes and dependency graphs.
 
 ---
 
+## Non-standard Extensions
+
+**jscrossword** supports some non-standard extensions to common formats to enable features not present in the original specifications.
+
+### Global Flags
+
+#### `fakeclues`, `realwords`, and `autofill`
+In both iPUZ and JPZ, you can add global flags that set corresponding metadata properties:
+- **`fakeclues`**: sets `metadata.fakeclues` to `true`.
+- **`realwords`**: sets `metadata.realwords` to `true`.
+- **`autofill`**: sets `metadata.autofill` to `true`.
+
+**JPZ:** Add `<fakeclues/>`, `<realwords/>`, or `<autofill/>` elements inside `<metadata>`.
+
+**iPUZ:** Add `"fakeclues": true`, `"realwords": true`, or `"autofill": true` at the top level.
+
+### Fake Clue Groups
+
+You can mark an entire group of clues (e.g., "Across" or "Down") as "fake" (e.g. for cryptic variety puzzles or puzzles with multiple sets of clues where some are decoys). When a group is marked as fake, the resulting `clueList` object will have a `fake: true` property.
+
+#### JPZ Extension
+
+In JPZ files, add a `fake="true"` attribute to the `<clues>` element:
+
+```xml
+<clues fake="true">
+  <title>Across</title>
+  <clue number="1" word="1">Fake clue text</clue>
+</clues>
+```
+
+#### iPUZ Extension
+
+In iPUZ files, add a top-level `fakecluegroups` property containing an array of clue group titles:
+
+```json
+{
+  "clues": {
+    "Across": [...],
+    "Down": [...]
+  },
+  "fakecluegroups": ["Across"]
+}
+```
+
+### Acrostics
+
+#### JPZ Extension
+While not part of the standard JPZ schema, **jscrossword** supports parsing acrostic puzzles from JPZ files using the `<acrostic>` element in place of `<crossword>`.
+
+---
+
 ## License
 
 MIT License © 2025 [Crossword Nexus](https://crosswordnexus.com)
