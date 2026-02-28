@@ -197,10 +197,14 @@ export function xw_read_ipuz(inputData) {
       }
       word_id++;
     });
-    clues.push({
-      title: title.split(':').at(-1),
-      clue: thisClues
-    });
+    const clueGroup = {
+      title: title.split(":").at(-1),
+      clue: thisClues,
+    };
+    if (data.fakecluegroups && data.fakecluegroups.includes(title)) {
+      clueGroup.fake = true;
+    }
+    clues.push(clueGroup);
   });
 
   if (!words.length) {
@@ -368,8 +372,12 @@ export function xw_write_ipuz(metadata, cells, words, clues) {
   j.solution = solution;
 
   const ipuz_clues = {};
+  const fakecluegroups = [];
   for (const clueList of clues) {
     ipuz_clues[clueList.title] = [];
+    if (clueList.fake) {
+      fakecluegroups.push(clueList.title);
+    }
     for (const thisClue of clueList.clue) {
       const ipuzClue = {
         clue: unescapeHtmlClue(thisClue.text)
@@ -385,6 +393,9 @@ export function xw_write_ipuz(metadata, cells, words, clues) {
     }
   }
   j.clues = ipuz_clues;
+  if (fakecluegroups.length) {
+    j.fakecluegroups = fakecluegroups;
+  }
 
   return JSON.stringify(j);
 }
