@@ -486,11 +486,30 @@ export class Puzzle {
   **/
   bruteForceUnlock() {
     if (!this.isSolutionLocked()) return true;
-    for (var key = 1000; key < 10000; key++) {
-      if (this.unlockSolution(key)) {
-        console.log(`Solution unlocked with key ${key}`);
-        return true;
+    let bestSolution = null;
+    let minRareLetters = Infinity;
+    let bestKey = -1;
+
+    for (let key = 1000; key < 10000; key++) {
+      const unscrambled = unscrambleSolution(this.solution, this.width, this.height, key, this.blacksquare());
+      if (this.checkAnswers(unscrambled)) {
+        const rareCount = (unscrambled.match(/[JQXZ]/g) || []).length;
+        if (rareCount < minRareLetters) {
+          minRareLetters = rareCount;
+          bestSolution = unscrambled;
+          bestKey = key;
+        }
+        // Optimization: if we find a solution with 0 rare letters, it's very likely the correct one.
+        if (minRareLetters === 0) break;
       }
+    }
+
+    if (bestSolution) {
+      this.solution = bestSolution;
+      this.scrambled_cksum = 0;
+      this.solution_state = SolutionState.Unlocked;
+      console.log(`Solution unlocked with key ${bestKey} (rare letters: ${minRareLetters})`);
+      return true;
     }
     return false;
   }
