@@ -1114,8 +1114,11 @@ async function jscrossword_to_pdf2(xw, options = {}) {
           );
         }
         const actualGridArea = gridProps.grid_width * gridProps.grid_height;
-        let actualVal = ((actualGridArea - ideal_grid_area) / ideal_grid_area) ** 2 +
-          ((docObj.clue_pt - ideal_clue_pt) / ideal_clue_pt) ** 2;
+        const cluePtDiff = (docObj.clue_pt - ideal_clue_pt) / ideal_clue_pt;
+        // Asymmetric penalty: Font size being too big is preferable to being too small.
+        // We scale the penalty down by 50% for positive deviations.
+        const cluePtPenalty = cluePtDiff > 0 ? 0.5 * (cluePtDiff ** 2) : cluePtDiff ** 2;
+        let actualVal = ((actualGridArea - ideal_grid_area) / ideal_grid_area) ** 2 + cluePtPenalty;
         if (pc.num_columns) {
           actualVal += pc.num_columns / 500;
         }
