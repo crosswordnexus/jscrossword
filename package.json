@@ -9,7 +9,8 @@
     "build:cli": "rollup -c --environment BUILD:cli",
     "build": "rollup -c",
     "build:stats": "STATS=true rollup -c",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "node scripts/run_tests.js"
   },
   "bin": {
     "puz2pdf": "./dist/puz2pdf.mjs"
