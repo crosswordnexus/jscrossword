@@ -639,7 +639,7 @@ function doc_with_clues(xw, options, doc_width, doc_height, clue_arrays, num_arr
     doc.setFontSize(testPt);
     doc.setLineWidth(options.line_width);
 
-    const max_clue_num_length = xw.clues.map(x => x.clue).flat().map(x => x.number).map(x => x.length).reduce((a, b) => Math.max(a, b));
+    const max_clue_num_length = xw.clues.map(x => x.clue).flat().map(x => x.number).map(x => x.length).reduce((a, b) => Math.max(a, b), 0);
     const num_margin = doc.getTextWidth('9'.repeat(max_clue_num_length));
     let num_xpos = options.margin + num_margin;
     const line_margin = 1.5 * doc.getTextWidth(' ');
