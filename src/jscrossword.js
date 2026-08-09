@@ -212,7 +212,7 @@ export default class JSCrossword {
         js.set_check_reveal();
         return js;
       } catch (err) {
-        console.log(err);
+        //console.log(err);
       }
     }
     throw new Error("Unknown puzzle format.");
