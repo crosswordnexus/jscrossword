@@ -6,7 +6,7 @@
 
 import { xwGrid } from "../grid.js";
 import { unescapeHtmlClue } from "../lib/escape.js";
-import pkg from "../../package.json" assert { type: "json" };
+import pkg from "../../package.json" with { type: "json" };
 
 /** Helper function to determine if we're 0- or 1-indexed **/
 function cellOffset(clues, height, width) {

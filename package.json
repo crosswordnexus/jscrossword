@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "JSCrossword",
-  "version": "2026.08.08.0",
+  "version": "2026.8.9.3",
   "description": "JavaScript crossword toolkit for reading/writing PUZ, JPZ, iPUZ, and CFP formats",
   "main": "dist/jscrossword_combined.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "build:cli": "rollup -c --environment BUILD:cli",
     "build": "rollup -c",
     "build:stats": "STATS=true rollup -c",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "node scripts/run_tests.js"
   },
   "bin": {
     "puz2pdf": "./dist/puz2pdf.mjs"
@@ -39,9 +40,12 @@
     "fflate": "^0.8.2",
     "image-size": "^2.0.2",
     "js-yaml": "^4.1.0",
-    "jspdf": "^3.0.3",
+    "jspdf": "^4.2.1",
     "linkedom": "^0.18.12",
     "lz-string": "^1.5.0",
     "twemoji": "^14.0.2"
+  },
+  "overrides": {
+    "fast-png": "^8.0.0"
   }
 }
