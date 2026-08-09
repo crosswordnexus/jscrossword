@@ -7,12 +7,54 @@ import json from "@rollup/plugin-json";
 
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isStats = process.env.STATS === "true";
 const buildTarget = process.env.BUILD; // "browser", "cli", or undefined
+
+let versionUpdated = false;
+
+const updateVersionPlugin = {
+  name: "update-version",
+  buildStart() {
+    if (versionUpdated) return;
+    versionUpdated = true;
+
+    try {
+      const pkgPath = path.resolve(__dirname, "package.json");
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+      const currentVersion = pkg.version || "0.0.0";
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const datePrefix = `${year}.${month}.${day}`;
+
+      let minor = 0;
+      if (currentVersion.startsWith(datePrefix)) {
+        const parts = currentVersion.split('.');
+        if (parts.length === 4) {
+          minor = parseInt(parts[3], 10) + 1;
+        } else {
+          minor = 1;
+        }
+      }
+      const newVersion = `${datePrefix}.${minor}`;
+
+      if (pkg.version !== newVersion) {
+        pkg.version = newVersion;
+        fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+        console.log(`\n[Version Update] Updated package.json version to: ${newVersion}`);
+      }
+    } catch (err) {
+      console.error("[Version Update] Failed to update package.json version:", err);
+    }
+  }
+};
 
 /**
  * Shared plugins
@@ -46,7 +88,7 @@ const browserConfig = {
     },
     inlineDynamicImports: true
   },
-  plugins: [...basePlugins, json(), terser()],
+  plugins: [updateVersionPlugin, ...basePlugins, json(), terser()],
   external: ["linkedom"]        // exclude from browser build
 };
 
@@ -64,6 +106,7 @@ const cliConfig = {
     strict: false                // don’t prepend "use strict"; keeps shebang at top
   },
   plugins: [
+    updateVersionPlugin,
     resolve({ preferBuiltins: true }),
     commonjs(),
     json(),
