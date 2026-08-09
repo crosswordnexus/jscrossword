@@ -346,10 +346,14 @@ export function xw_write_ipuz(metadata, cells, words, clues) {
       }
       if (barred) style.barred = barred;
 
+      if (cell.letter) {
+        thisCell.value = cell.letter;
+      }
+
       if (Object.keys(style).length > 0) {
         thisCell.style = style;
-      } else {
-        // if it's just a number, simplify to string
+      } else if (!thisCell.value) {
+        // if it's just a number with no style or value, simplify to string
         thisCell = thisCell.cell || "_";
       }
 
