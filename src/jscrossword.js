@@ -20,7 +20,7 @@ export default class JSCrossword {
    * words:    array of {id, cells}
    * clues:    array of {title, clue: [...]}
    */
-  constructor(metadata, cells, words, clues) {
+  constructor(metadata = {}, cells = [], words = [], clues = []) {
     this.metadata = metadata;
     this.cells = cells;
     this.words = words;
@@ -148,6 +148,20 @@ export default class JSCrossword {
   static readIPUZ(data, options = {}) {
     const { metadata, cells, words, clues } = xw_read_ipuz(data);
     return new JSCrossword(metadata, cells, words, clues);
+  }
+
+  static fromIpuz(data, options = {}) {
+    return JSCrossword.readIPUZ(data, options);
+  }
+
+  fromIpuz(data, options = {}) {
+    const { metadata, cells, words, clues } = xw_read_ipuz(data);
+    this.metadata = metadata;
+    this.cells = cells;
+    this.words = words;
+    this.clues = clues;
+    this.sanitize();
+    return this;
   }
 
   static readRG(data, options = {}) {

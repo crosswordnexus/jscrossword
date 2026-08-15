@@ -26,15 +26,17 @@ function cellOffset(clues, height, width) {
 }
 
 export function xw_read_ipuz(inputData) {
-  if (!(inputData instanceof Uint8Array)) {
-    throw new Error("IPUZ parser expects Uint8Array input");
+  let data;
+  if (inputData instanceof Uint8Array) {
+    const jsonString = new TextDecoder("utf-8").decode(inputData);
+    data = JSON.parse(jsonString);
+  } else if (typeof inputData === "string") {
+    data = JSON.parse(inputData);
+  } else if (inputData && typeof inputData === "object") {
+    data = inputData;
+  } else {
+    throw new Error("IPUZ parser expects Uint8Array, string, or object");
   }
-
-  // decode bytes to UTF-8 string
-  const jsonString = new TextDecoder("utf-8").decode(inputData);
-
-  // parse JSON
-  const data = JSON.parse(jsonString);
 
   const ALLOWED_KINDS = ['crossword', 'diagramless', 'coded'];
   let crossword_type = null;
