@@ -72,8 +72,11 @@ def make_png(text):
     square_img = Image.new('RGBA', (canvas_size, canvas_size), (255, 255, 255, 0))
     square_img.paste(cropped, ((canvas_size - w) // 2, (canvas_size - h) // 2))
 
+    # Convert to Grayscale + Alpha (LA) to reduce color channels and optimize PNG compression
+    la_img = square_img.convert('LA')
+
     output = io.BytesIO()
-    square_img.save(output, format='PNG')
+    la_img.save(output, format='PNG', optimize=True)
     return base64.b64encode(output.getvalue()).decode('utf-8')
 
 # Generate the JS file content
