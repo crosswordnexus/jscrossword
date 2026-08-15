@@ -107,6 +107,14 @@ function foldReplacing(str, fallback = '*') {
     '≈': '~',
     '…': '...',
 
+    // Fraktur / Script / Double-struck letters (e.g. 𝔉, ℝ, ℂ, ℤ, ℕ)
+    '𝔉': 'F',
+    'ℝ': 'R',
+    'ℂ': 'C',
+    'ℤ': 'Z',
+    'ℕ': 'N',
+    'ℚ': 'Q',
+
     // Currency (core fonts usually don’t do € reliably)
     '€': 'EUR',
     '£': 'GBP',
@@ -343,7 +351,8 @@ function split_text_to_size_bi(
     const SPLIT_CHARS = new Set([" ", "\t", "\n", "-"]);
     const lines = wrapped.map(line => {
       const thisLine = [];
-      for (let i = 0; i < line.length; i++) {
+      const graphemes = splitGraphemes(line);
+      for (let i = 0; i < graphemes.length; i++) {
         thisLine.push(split_clue[ctr++]);
       }
       if (split_clue[ctr] && SPLIT_CHARS.has(split_clue[ctr].char)) {
@@ -377,7 +386,8 @@ function split_text_to_size_bi(
       acc.split(/([\-\s]+)/).forEach(word => {
         if (word) {
           measured_chunks.push(word);
-          chunk_map.push(indices.splice(0, word.length));
+          const wordGraphemeCount = splitGraphemes(word).length;
+          chunk_map.push(indices.splice(0, wordGraphemeCount));
         }
       });
     }
