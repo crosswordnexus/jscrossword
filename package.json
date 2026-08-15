@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "JSCrossword",
-  "version": "2026.8.15.20",
+  "version": "2026.8.15.21",
   "description": "JavaScript crossword toolkit for reading/writing PUZ, JPZ, iPUZ, and CFP formats",
   "main": "dist/jscrossword_combined.js",
   "scripts": {
@@ -36,10 +36,10 @@
   ],
   "author": "Alex Boisvert",
   "dependencies": {
+    "@mourner/yeahml": "^1.0.0",
     "dompurify": "^3.2.7",
     "fflate": "^0.8.2",
     "image-size": "^2.0.2",
-    "js-yaml": "^4.1.0",
     "jspdf": "^4.2.1",
     "linkedom": "^0.18.12",
     "lz-string": "^1.5.0",

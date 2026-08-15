@@ -1,5 +1,5 @@
 import { maybeUnzipText } from "../lib/maybeUnzip.js";
-import jsyaml from "js-yaml";
+import { parse as parseYAML } from "@mourner/yeahml";
 
 // convert basic markdown to HTML
 function formatText(input) {
@@ -60,7 +60,7 @@ function sortByClue(arr) {
 function rgToJSCrossword(rgStr, thorny=true) {
   // Parse RG
   const actualYAML = convertToTraditionalYAML(rgStr);
-  const jsObj = jsyaml.load(actualYAML);
+  const jsObj = parseYAML(actualYAML);
 
   // Metadata
   const metadata = {
