@@ -275,6 +275,30 @@ While not part of the standard JPZ schema, **jscrossword** supports parsing acro
 
 ---
 
+## Math and Unicode Symbol Rendering in PDFs
+
+Standard PDF core fonts (like Helvetica) do not support non-Latin-1 characters (such as math symbols `∀`, `∈`, `≥` or Greek letters like `Ω`). To render these cleanly without the massive file size overhead of embedding custom TrueType fonts, **jscrossword** uses a lightweight inline PNG rendering pipeline.
+
+### How it works:
+* The symbols are generated as small, high-contrast, transparent PNGs, base64-encoded, and stored in [src/lib/symbol_images.js](src/lib/symbol_images.js).
+* During PDF layout, the rendering engine checks if a character has an inline PNG image. If it does, it renders it inline at the cap-height of the surrounding text using jsPDF's native `addImage()`.
+* If a symbol is not used in a crossword, it is never added to the output PDF, resulting in zero size overhead for standard crosswords.
+
+### Adding new symbols:
+If you need to support additional mathematical or special characters in PDFs:
+1. Add the character to the `SYMBOLS` array at the top of the [scripts/generate_symbols.py](scripts/generate_symbols.py) script.
+2. Run the script to regenerate [src/lib/symbol_images.js](src/lib/symbol_images.js):
+   ```sh
+   python3 scripts/generate_symbols.py
+   ```
+   *Note: The script requires Python and the `Pillow` image library installed. It will automatically detect your OS, search for Unicode system fonts, crop the symbol to its exact pixel bounding box, and center it inside a padded 1:1 aspect-ratio canvas.*
+3. Rebuild the project so it compiles into the final bundles:
+   ```sh
+   npm run build
+   ```
+
+---
+
 ## License
 
 MIT License © 2025 [Crossword Nexus](https://crosswordnexus.com)
