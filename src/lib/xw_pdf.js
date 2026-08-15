@@ -97,15 +97,9 @@ function foldReplacing(str, fallback = '*') {
     '\u2060': '',            // word joiner
 
     // Common symbols that often appear in text
-    '©': '(c)', '®': '(R)', '™': '(TM)',
-    '°': ' deg ',            // optional: you may prefer "°" if it renders for you
     '×': 'x',
     '÷': '/',
-    '≠': '!=',
-    '≤': '<=',
-    '≥': '>=',
     '≈': '~',
-    '…': '...',
 
     // Fraktur / Script / Double-struck letters (e.g. 𝔉, ℝ, ℂ, ℤ, ℕ)
     '𝔉': 'F',
@@ -115,33 +109,13 @@ function foldReplacing(str, fallback = '*') {
     'ℕ': 'N',
     'ℚ': 'Q',
 
-    // Currency (core fonts usually don’t do € reliably)
-    '€': 'EUR',
-    '£': 'GBP',
-    '¥': 'JPY',
-
-    // Fractions
-    '½': '1/2',
-    '¼': '1/4',
-    '¾': '3/4',
-
-    // Arrows (often unsupported)
-    '→': '->',
-    '←': '<-',
-    '↔': '<->',
-    '⇒': '=>',
-    '⇐': '<=',
   };
 
   // Chars that don't decompose the way we want (or decompose to something odd)
   const specialFold = {
-    'ß': 'ss',
-    'Æ': 'AE', 'æ': 'ae',
-    'Œ': 'OE', 'œ': 'oe',
     'Ø': 'O',  'ø': 'o',
     'Đ': 'D',  'đ': 'd',
     'Ł': 'L',  'ł': 'l',
-    'Þ': 'Th', 'þ': 'th',
     'İ': 'I',  'ı': 'i',
     'Ŋ': 'N',  'ŋ': 'n',
   };
