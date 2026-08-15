@@ -7,11 +7,13 @@ import platform
 
 # Define the symbols you want to convert to inline PNG images
 SYMBOLS = ['∀', '∈', 'Ω', '≥']
+# Generated font size. Bigger looks better, smaller results in smaller file size
+FONT_SIZE = 36
 
 # Determine font path based on operating system
 def get_system_font():
     system = platform.system()
-    
+
     if system == "Darwin":  # macOS
         paths = [
             '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
@@ -33,7 +35,7 @@ def get_system_font():
             '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
             '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
         ]
-        
+
     for p in paths:
         if os.path.exists(p):
             return p
@@ -50,7 +52,7 @@ def make_png(text):
     # Draw at a moderate size (48pt) to keep base64 strings compact
     img = Image.new('RGBA', (100, 100), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(font_path, 48)
+    font = ImageFont.truetype(font_path, FONT_SIZE)
 
     # Calculate bounding box
     bbox = draw.textbbox((0, 0), text, font=font)
