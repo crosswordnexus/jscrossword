@@ -65,6 +65,10 @@ const basePlugins = [
       {
         find: "html2canvas",
         replacement: path.resolve(__dirname, "src/empty-module.js")
+      },
+      {
+        find: "image-size",
+        replacement: path.resolve(__dirname, "src/empty-module.js")
       }
     ]
   }),
