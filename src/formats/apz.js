@@ -297,8 +297,6 @@ export function xw_read_apz(data) {
     const y = quoteHeight + 1 + r;
 
     // --- Left Column ---
-    fillVoid(0, 1, y);
-
     const leftClueIdx = r;
     const leftClueLetter = getClueLetter(leftClueIdx);
     const leftWordId = (leftClueIdx + 1).toString();
@@ -306,7 +304,7 @@ export function xw_read_apz(data) {
     const leftKey = gridKey[leftClueIdx] || [];
 
     cells.push({
-      x: 1,
+      x: 0,
       y,
       solution: leftClueLetter,
       number: null,
@@ -322,7 +320,7 @@ export function xw_read_apz(data) {
     const leftWordCells = [];
     for (let j = 0; j < leftAnswer.length; j++) {
       const num = leftKey[j];
-      const cx = 2 + j;
+      const cx = 1 + j;
       const cell = {
         x: cx,
         y,
@@ -344,7 +342,7 @@ export function xw_read_apz(data) {
       }
     }
 
-    fillVoid(2 + leftAnswer.length, leftColEnd, y);
+    fillVoid(1 + leftAnswer.length, leftColEnd, y);
     fillVoid(leftColEnd, leftColEnd + 1, y);
 
     // --- Right Column ---
