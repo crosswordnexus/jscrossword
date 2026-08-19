@@ -4,6 +4,7 @@ import { xw_read_jpz, xw_write_jpz } from "./formats/jpz.js";
 import { xw_read_puz } from "./formats/puz.js";
 import { xw_read_rg } from "./formats/rg.js";
 import { xw_read_xd } from "./formats/xd.js";
+import { xw_read_apz } from "./formats/apz.js";
 import { jscrossword_to_pdf } from "./lib/xw_pdf.js";
 import { xwGrid } from "./grid.js";
 
@@ -174,13 +175,19 @@ export default class JSCrossword {
     return new JSCrossword(metadata, cells, words, clues);
   }
 
+  static readAPZ(data, options = {}) {
+    const { metadata, cells, words, clues } = xw_read_apz(data);
+    return new JSCrossword(metadata, cells, words, clues);
+  }
+
   static READERS = [
     JSCrossword.readPUZ,
     JSCrossword.readJPZ,
     JSCrossword.readIPUZ,
     JSCrossword.readCFP,
     JSCrossword.readRG,
-    JSCrossword.readXD
+    JSCrossword.readXD,
+    JSCrossword.readAPZ
   ];
 
   /**
