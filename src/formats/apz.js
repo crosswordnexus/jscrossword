@@ -102,7 +102,9 @@ export function xw_read_apz(data) {
   if (!puzzle) throw new Error("Not a valid APZ puzzle");
 
   const metadataNode = puzzle.getElementsByTagName("metadata")[0];
-  if (!metadataNode) throw new Error("Not a valid APZ puzzle (missing metadata)");
+  const getMetadataText = (tag) => {
+    return metadataNode ? getText(metadataNode, tag) : "";
+  };
 
   const solutionRaw = getText(puzzle, "solution");
   const cleanSolution = solutionRaw.replace(/[\r\n]+/g, "");
@@ -123,12 +125,12 @@ export function xw_read_apz(data) {
   const rightColWidth = 1 + rightMax;
 
   // Determine quote width and height (optional, treated as suggestions)
-  let quoteWidth = parseInt(getText(metadataNode, "width"), 10);
+  let quoteWidth = parseInt(getMetadataText("width"), 10);
   if (!quoteWidth || isNaN(quoteWidth) || quoteWidth <= 0) {
     quoteWidth = Math.max(leftColWidth + 1 + rightColWidth, 27);
   }
 
-  let quoteHeight = parseInt(getText(metadataNode, "height"), 10);
+  let quoteHeight = parseInt(getMetadataText("height"), 10);
   const minQuoteHeight = Math.ceil(cleanSolution.length / quoteWidth);
   if (!quoteHeight || isNaN(quoteHeight) || quoteHeight < minQuoteHeight) {
     quoteHeight = minQuoteHeight;
@@ -168,10 +170,10 @@ export function xw_read_apz(data) {
   const completionMessage = getText(puzzle, "completion") || "";
 
   const metadata = {
-    title: getText(metadataNode, "title"),
-    author: getText(metadataNode, "creator"),
-    copyright: getText(metadataNode, "copyright"),
-    description: getText(metadataNode, "description"),
+    title: getMetadataText("title"),
+    author: getMetadataText("creator"),
+    copyright: getMetadataText("copyright"),
+    description: getMetadataText("description"),
     height: totalHeight,
     width: totalWidth,
     crossword_type: "acrostic",
