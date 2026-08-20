@@ -295,38 +295,34 @@ export function xw_read_apz(data) {
   const words = [];
   const clueList = [];
 
-  for (let r = 0; r < colSize; r++) {
-    const y = quoteHeight + 1 + r;
-
-    // --- Left Column ---
-    const leftClueIdx = r;
-    const leftClueLetter = getClueLetter(leftClueIdx);
-    const leftWordId = (leftClueIdx + 1).toString();
-    const leftAnswer = answers[leftClueIdx] || "";
-    const leftKey = gridKey[leftClueIdx] || [];
+  const addClue = (clueIdx, startX, y) => {
+    const clueLetter = getClueLetter(clueIdx);
+    const wordId = (clueIdx + 1).toString();
+    const answer = answers[clueIdx] || "";
+    const key = gridKey[clueIdx] || [];
 
     cells.push({
-      x: 0,
+      x: startX,
       y,
-      solution: leftClueLetter,
+      solution: clueLetter,
       number: null,
       type: "clue",
       "background-shape": null,
-      letter: leftClueLetter,
+      letter: clueLetter,
       top_right_number: null,
       is_void: false,
       clue: true,
-      value: leftClueLetter
+      value: clueLetter
     });
 
-    const leftWordCells = [];
-    for (let j = 0; j < leftAnswer.length; j++) {
-      const num = leftKey[j];
-      const cx = 1 + j;
+    const wordCells = [];
+    for (let j = 0; j < answer.length; j++) {
+      const num = key[j];
+      const cx = startX + 1 + j;
       const cell = {
         x: cx,
         y,
-        solution: leftAnswer[j].toUpperCase(),
+        solution: answer[j].toUpperCase(),
         number: num ? num.toString() : null,
         type: null,
         "background-shape": null,
@@ -337,81 +333,37 @@ export function xw_read_apz(data) {
         value: null
       };
       cells.push(cell);
-      leftWordCells.push([cx, y]);
+      wordCells.push([cx, y]);
 
       if (num && numberToCellMap[num.toString()]) {
-        numberToCellMap[num.toString()].top_right_number = leftClueLetter;
+        numberToCellMap[num.toString()].top_right_number = clueLetter;
       }
     }
 
-    fillVoid(1 + leftAnswer.length, leftColEnd, y);
+    words.push({ id: wordId, cells: wordCells });
+    clueList.push({
+      text: clueTexts[clueIdx],
+      word: wordId,
+      number: clueLetter
+    });
+  };
+
+  for (let r = 0; r < colSize; r++) {
+    const y = quoteHeight + 1 + r;
+
+    // --- Left Column ---
+    addClue(r, 0, y);
+    fillVoid(1 + (answers[r] || "").length, leftColEnd, y);
     fillVoid(leftColEnd, leftColEnd + 1, y);
 
     // --- Right Column ---
     const rightClueIdx = colSize + r;
     if (rightClueIdx < answers.length) {
-      const rightClueLetter = getClueLetter(rightClueIdx);
-      const rightWordId = (rightClueIdx + 1).toString();
-      const rightAnswer = answers[rightClueIdx] || "";
-      const rightKey = gridKey[rightClueIdx] || [];
-
-      cells.push({
-        x: leftColEnd + 1,
-        y,
-        solution: rightClueLetter,
-        number: null,
-        type: "clue",
-        "background-shape": null,
-        letter: rightClueLetter,
-        top_right_number: null,
-        is_void: false,
-        clue: true,
-        value: rightClueLetter
-      });
-
-      const rightWordCells = [];
-      for (let j = 0; j < rightAnswer.length; j++) {
-        const num = rightKey[j];
-        const cx = leftColEnd + 2 + j;
-        const cell = {
-          x: cx,
-          y,
-          solution: rightAnswer[j].toUpperCase(),
-          number: num ? num.toString() : null,
-          type: null,
-          "background-shape": null,
-          letter: null,
-          top_right_number: null,
-          is_void: false,
-          clue: false,
-          value: null
-        };
-        cells.push(cell);
-        rightWordCells.push([cx, y]);
-
-        if (num && numberToCellMap[num.toString()]) {
-          numberToCellMap[num.toString()].top_right_number = rightClueLetter;
-        }
-      }
-
-      fillVoid(leftColEnd + 2 + rightAnswer.length, totalWidth, y);
-
-      words.push({ id: rightWordId, cells: rightWordCells });
-      clueList.push({
-        text: clueTexts[rightClueIdx],
-        word: rightWordId,
-        number: rightClueLetter
-      });
+      addClue(rightClueIdx, leftColEnd + 1, y);
+      fillVoid(leftColEnd + 2 + (answers[rightClueIdx] || "").length, totalWidth, y);
     } else {
       fillVoid(leftColEnd + 1, totalWidth, y);
     }
-
-    words.push({ id: leftWordId, cells: leftWordCells });
-    clueList.push({
-      text: clueTexts[leftClueIdx],
-      word: leftWordId,
-      number: leftClueLetter
-    });
   }
 
   // --- Quote Word containing all quote cells ---
