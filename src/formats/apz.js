@@ -44,10 +44,17 @@ export function generateGridKey(solutionStr, answers) {
 
   let remainingSolutionCharacters = solutionWords.map((w, idx) => ({ ...w, originalIdx: idx }));
 
+  // seeded RNG from https://stackoverflow.com/a/19303725
+  let RNGSeed = 1;
+  function random() {
+      var x = Math.sin(RNGSeed++) * 10000;
+      return x - Math.floor(x);
+  }
+
   function shuffle(arr) {
     const newArr = [...arr];
     for (let i = newArr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(random() * (i + 1));
       [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
     }
     return newArr;
@@ -76,7 +83,7 @@ export function generateGridKey(solutionStr, answers) {
         ? solutionCharactersInUnusedWords
         : matchingSolutionCharacters;
 
-      const selected = candidateSolutionCharacters[Math.floor(Math.random() * candidateSolutionCharacters.length)];
+      const selected = candidateSolutionCharacters[Math.floor(random() * candidateSolutionCharacters.length)];
       remainingSolutionCharacters = remainingSolutionCharacters.filter(w => w.originalIdx !== selected.originalIdx);
       solutionWordsUsedInAnswer.add(selected.wordIdx);
 
