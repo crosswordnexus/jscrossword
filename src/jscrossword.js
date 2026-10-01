@@ -12,6 +12,7 @@ import createDOMPurify from "dompurify";
 import { parseHTML } from "linkedom";
 
 import LZString from "lz-string";
+import { gzipSync, gunzipSync, strToU8, strFromU8 } from "fflate";
 
 export default class JSCrossword {
   /*
@@ -260,18 +261,55 @@ export default class JSCrossword {
   /**
    * Instance method: serialize this crossword into compressed, URI-safe string.
    */
-  serialize() {
+  serialize(gz_b64 = true) {
     // remove some NULL stuff
     const json = JSON.stringify(this, (key, value) =>
       value === null ? undefined : value
     );
+    if (gz_b64) {
+      const compressed = gzipSync(strToU8(json));
+      let binary = "";
+      const len = compressed.length;
+      const CHUNK_SIZE = 0x8000;
+      for (let i = 0; i < len; i += CHUNK_SIZE) {
+        binary += String.fromCharCode.apply(
+          null,
+          compressed.subarray(i, Math.min(i + CHUNK_SIZE, len))
+        );
+      }
+      const b64 = typeof btoa === "function"
+        ? btoa(binary)
+        : Buffer.from(compressed).toString("base64");
+      return "gz:" + b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
     return LZString.compressToEncodedURIComponent(json);
   }
 
   /**
    * Static method: deserialize a compressed string back into a JSCrossword.
    */
-  static deserialize(param) {
+  static deserialize(param, gz_b64 = false) {
+    if (gz_b64 || (typeof param === "string" && param.startsWith("gz:"))) {
+      const raw = typeof param === "string" && param.startsWith("gz:") ? param.slice(3) : param;
+      let sanitized = decodeURIComponent(raw).trim().replace(/-/g, "+").replace(/_/g, "/");
+      while (sanitized.length % 4 !== 0) {
+        sanitized += "=";
+      }
+      let bytes;
+      if (typeof atob === "function") {
+        const binary = atob(sanitized);
+        bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+      } else {
+        bytes = new Uint8Array(Buffer.from(sanitized, "base64"));
+      }
+      const decompressed = gunzipSync(bytes);
+      const json = strFromU8(decompressed);
+      const obj = JSON.parse(json);
+      return new JSCrossword(obj.metadata, obj.cells, obj.words, obj.clues);
+    }
     const json = LZString.decompressFromEncodedURIComponent(param);
     const obj = JSON.parse(json);
     return new JSCrossword(obj.metadata, obj.cells, obj.words, obj.clues);
