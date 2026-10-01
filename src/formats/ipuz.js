@@ -164,8 +164,16 @@ export function xw_read_ipuz(inputData) {
   const offset = cellOffset(data['clues'], height, width);
   console.log("Detected cell offset: ", offset);
 
+  const isAllFake = Boolean(data.fakeclues);
+  const isRealWords = Boolean(data.realwords);
+  const fakeGroups = new Set(data.fakecluegroups || []);
+  const rollAllFromGrid = isAllFake && !isRealWords;
+
   titles.forEach(title => {
+    const isGroupFake = isAllFake || fakeGroups.has(title);
     const thisClues = [];
+    let groupProvidedCells = false;
+
     (data.clues[title] || []).forEach(clue => {
       let number = '',
         text = '',
@@ -183,30 +191,71 @@ export function xw_read_ipuz(inputData) {
           ...(clue.continued || {})
         };
       }
+
+      let thisWordId = null;
+
+      if (!isGroupFake) {
+        thisWordId = (word_id++).toString();
+        if (clue.cells && clue.cells.length) {
+          groupProvidedCells = true;
+          const thisCells = clue.cells.map(c => [c[0] - offset, c[1] - offset]);
+          words.push({
+            id: thisWordId,
+            cells: thisCells
+          });
+        }
+      } else {
+        thisWordId = null;
+        if (!rollAllFromGrid && clue.cells && clue.cells.length) {
+          groupProvidedCells = true;
+          const thisCells = clue.cells.map(c => [c[0] - offset, c[1] - offset]);
+          words.push({
+            id: (word_id++).toString(),
+            cells: thisCells
+          });
+        }
+      }
+
       thisClues.push({
-        word: word_id.toString(),
+        word: thisWordId,
         number,
         text,
         refs
       });
-
-      if (clue.cells && clue.cells.length) {
-        const thisCells = clue.cells.map(c => [c[0] - offset, c[1] - offset]);
-        words.push({
-          id: word_id.toString(),
-          cells: thisCells
-        });
-      }
-      word_id++;
     });
+
     const clueGroup = {
       title: title.split(":").at(-1),
       clue: thisClues,
     };
-    if (data.fakecluegroups && data.fakecluegroups.includes(title)) {
+    if (isGroupFake) {
       clueGroup.fake = true;
     }
     clues.push(clueGroup);
+
+    if (!groupProvidedCells && !rollAllFromGrid && !data.words) {
+      const thisGrid = new xwGrid(cells);
+      const lowerTitle = title.toLowerCase();
+      if (lowerTitle.includes('across')) {
+        const acrossEntries = thisGrid.acrossEntries();
+        Object.keys(acrossEntries).forEach(i => {
+          words.push({
+            id: (word_id++).toString(),
+            cells: acrossEntries[i].cells,
+            dir: 'across'
+          });
+        });
+      } else if (lowerTitle.includes('down')) {
+        const downEntries = thisGrid.downEntries();
+        Object.keys(downEntries).forEach(i => {
+          words.push({
+            id: (word_id++).toString(),
+            cells: downEntries[i].cells,
+            dir: 'down'
+          });
+        });
+      }
+    }
   });
 
   if (!words.length) {

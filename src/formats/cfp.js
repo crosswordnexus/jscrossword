@@ -84,7 +84,8 @@ export function xw_read_cfp(data) {
     DOWN: thisGrid.downEntries(),
   };
   const clues1 = { ACROSS: [], DOWN: [] };
-  const words = [];
+  const acrossWords = [];
+  const downWords = [];
 
   const wordNodes = root.getElementsByTagName("WORD");
   for (let i = 0; i < wordNodes.length; i++) {
@@ -98,8 +99,14 @@ export function xw_read_cfp(data) {
 
     clues1[dir].push({ word: word_id, number, text });
     const thisCells = entries[dir][Number(number)].cells;
-    words.push({ id: word_id, cells: thisCells });
+    if (dir === "ACROSS") {
+      acrossWords.push({ id: word_id, cells: thisCells });
+    } else {
+      downWords.push({ id: word_id, cells: thisCells });
+    }
   }
+
+  const words = [...acrossWords, ...downWords];
 
   const clues = [
     { title: "ACROSS", clue: clues1["ACROSS"] },

@@ -22,6 +22,19 @@ All formats are normalized into a single `JSCrossword` class that provides:
 
 ---
 
+## Data Model & Specification
+
+A normalized `JSCrossword` instance exposes:
+- **`metadata`**: Object containing `title`, `author`, `copyright`, `description`, `height`, `width`, `crossword_type`, etc.
+- **`cells`**: Array of cell objects with coordinates `(x, y)` (0-indexed), `solution`, `number`, `type` (`"block"`, `"void"`, etc.), and visual styles.
+- **`words`**: Array of `{ id, cells }` defining all playable slots in the grid.
+  - Ordered by canonical solving / tab sequence (Across entries in clue order, then Down entries in clue order).
+- **`clues`**: Array of clue groups `{ title, clue: [...] }`. Each clue entry contains `{ number, text, word }`:
+  - **Associated ("Real") Clues**: `word` points to an entry `id` in `words`. Solvers navigate to this entry when the clue is selected, and highlight the clue when this word is active.
+  - **Unplaced / Unassociated ("Fake") Clues**: `word` is `null` (or omitted). Used for unplaced clue banks, alphabetized clues, or anagrams where clues do not map 1:1 to a specific grid slot. Solvers can toggle manual completion (strikethrough) without grid navigation.
+
+---
+
 ## Project structure
 
 ```

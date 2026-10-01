@@ -1191,34 +1191,45 @@ function jscrossword_from_puz(puzzle, options) {
     },
   ];
 
-  let wordId = 1;
   let clueIdx = 0;
-
   for (const item of allEntries) {
-    const id = String(wordId++);
-    const text = clues[clueIdx++] ?? "";
-
-    words.push({
-      id,
-      cells: item.entry.cells
-    });
-
-    const clueObj = {
-      word: id,
-      number: String(item.number),
-      text,
-    };
-
-    if (item.kind === "across") {
-      cluesOut[0].clue.push(clueObj);
-    } else {
-      cluesOut[1].clue.push(clueObj);
-    }
+    item.text = clues[clueIdx++] ?? "";
   }
 
   // Optional: warn if clue count mismatch
   if (clueIdx !== clues.length) {
     console.warn(`PUZ clue count mismatch: consumed ${clueIdx} of ${clues.length}`);
+  }
+
+  const acrossEntries = allEntries.filter(e => e.kind === "across");
+  const downEntries = allEntries.filter(e => e.kind === "down");
+
+  let wordId = 1;
+
+  for (const item of acrossEntries) {
+    const id = String(wordId++);
+    words.push({
+      id,
+      cells: item.entry.cells
+    });
+    cluesOut[0].clue.push({
+      word: id,
+      number: String(item.number),
+      text: item.text,
+    });
+  }
+
+  for (const item of downEntries) {
+    const id = String(wordId++);
+    words.push({
+      id,
+      cells: item.entry.cells
+    });
+    cluesOut[1].clue.push({
+      word: id,
+      number: String(item.number),
+      text: item.text,
+    });
   }
 
   return {

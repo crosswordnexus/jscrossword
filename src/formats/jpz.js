@@ -1,6 +1,7 @@
 import { maybeUnzipText } from "../lib/maybeUnzip.js";
 import { parseXml } from "../lib/xmlparser.js";
 import { unescapeHtmlClue } from "../lib/escape.js";
+import { xwGrid } from "../grid.js";
 
 /*******************
 * JPZ reading/writing functions
@@ -149,21 +150,45 @@ export function xw_read_jpz(data) {
     return { id: word.getAttribute("id"), cells: word_cells };
   });
 
+  if (!words.length && crossword_type !== "diagramless") {
+    const thisGrid = new xwGrid(cells);
+    let word_id = 1;
+    const acrossEntries = thisGrid.acrossEntries();
+    Object.keys(acrossEntries).forEach(i => {
+      words.push({
+        id: (word_id++).toString(),
+        cells: acrossEntries[i].cells,
+        dir: "across",
+      });
+    });
+    const downEntries = thisGrid.downEntries();
+    Object.keys(downEntries).forEach(i => {
+      words.push({
+        id: (word_id++).toString(),
+        cells: downEntries[i].cells,
+        dir: "down",
+      });
+    });
+  }
+
   // clues
   const clues = [];
   if (crossword_type !== "coded") {
     crossword.querySelectorAll("clues").forEach(clues_block => {
       const title = clues_block.querySelector("title")?.textContent.trim() || "";
-      const isFake = clues_block.getAttribute("fake") === "true";
+      const isFake = clues_block.getAttribute("fake") === "true" ||
+                     Boolean(metadata.fakeclues && !metadata.realwords);
       const clueList = Array.from(clues_block.querySelectorAll("clue")).map(clue => {
         let text = clue.innerHTML.trim();
         text = text.replace(/\s+xmlns="[^"]*"/g, "");
         text = unescapeHtmlClue(text);
         const fmt = clue.getAttribute("format");
         if (fmt) text += ` (${fmt})`;
+        const wordAttr = clue.getAttribute("word");
+        const word = isFake ? null : (wordAttr || null);
         return {
           text,
-          word: clue.getAttribute("word"),
+          word,
           number: clue.getAttribute("number"),
         };
       });
