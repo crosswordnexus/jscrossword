@@ -169,10 +169,18 @@ export function xw_read_ipuz(inputData) {
   const fakeGroups = new Set(data.fakecluegroups || []);
   const rollAllFromGrid = isAllFake && !isRealWords;
 
+  const thisGrid = !data.words ? new xwGrid(cells) : null;
+  const acrossEntries = thisGrid ? thisGrid.acrossEntries() : {};
+  const downEntries = thisGrid ? thisGrid.downEntries() : {};
+  const cluedAcrossNumbers = new Set();
+  const cluedDownNumbers = new Set();
+
   titles.forEach(title => {
     const isGroupFake = isAllFake || fakeGroups.has(title);
     const thisClues = [];
-    let groupProvidedCells = false;
+    const lowerTitle = title.toLowerCase();
+    const isAcross = lowerTitle.includes('across');
+    const isDown = lowerTitle.includes('down');
 
     (data.clues[title] || []).forEach(clue => {
       let number = '',
@@ -192,26 +200,35 @@ export function xw_read_ipuz(inputData) {
         };
       }
 
+      let thisCells = null;
+      if (clue.cells && clue.cells.length) {
+        thisCells = clue.cells.map(c => [c[0] - offset, c[1] - offset]);
+      } else if (isAcross && acrossEntries[number]) {
+        thisCells = acrossEntries[number].cells;
+        cluedAcrossNumbers.add(number.toString());
+      } else if (isDown && downEntries[number]) {
+        thisCells = downEntries[number].cells;
+        cluedDownNumbers.add(number.toString());
+      }
+
       let thisWordId = null;
 
       if (!isGroupFake) {
-        thisWordId = (word_id++).toString();
-        if (clue.cells && clue.cells.length) {
-          groupProvidedCells = true;
-          const thisCells = clue.cells.map(c => [c[0] - offset, c[1] - offset]);
+        if (thisCells && thisCells.length) {
+          thisWordId = (word_id++).toString();
           words.push({
             id: thisWordId,
-            cells: thisCells
+            cells: thisCells,
+            dir: isAcross ? 'across' : (isDown ? 'down' : undefined)
           });
         }
       } else {
         thisWordId = null;
-        if (!rollAllFromGrid && clue.cells && clue.cells.length) {
-          groupProvidedCells = true;
-          const thisCells = clue.cells.map(c => [c[0] - offset, c[1] - offset]);
+        if (!rollAllFromGrid && thisCells && thisCells.length) {
           words.push({
             id: (word_id++).toString(),
-            cells: thisCells
+            cells: thisCells,
+            dir: isAcross ? 'across' : (isDown ? 'down' : undefined)
           });
         }
       }
@@ -233,26 +250,26 @@ export function xw_read_ipuz(inputData) {
     }
     clues.push(clueGroup);
 
-    if (!groupProvidedCells && !rollAllFromGrid && !data.words) {
-      const thisGrid = new xwGrid(cells);
-      const lowerTitle = title.toLowerCase();
-      if (lowerTitle.includes('across')) {
-        const acrossEntries = thisGrid.acrossEntries();
-        Object.keys(acrossEntries).forEach(i => {
-          words.push({
-            id: (word_id++).toString(),
-            cells: acrossEntries[i].cells,
-            dir: 'across'
-          });
+    if (!isGroupFake && !rollAllFromGrid && !data.words) {
+      if (isAcross) {
+        Object.keys(acrossEntries).forEach(num => {
+          if (!cluedAcrossNumbers.has(num.toString())) {
+            words.push({
+              id: (word_id++).toString(),
+              cells: acrossEntries[num].cells,
+              dir: 'across'
+            });
+          }
         });
-      } else if (lowerTitle.includes('down')) {
-        const downEntries = thisGrid.downEntries();
-        Object.keys(downEntries).forEach(i => {
-          words.push({
-            id: (word_id++).toString(),
-            cells: downEntries[i].cells,
-            dir: 'down'
-          });
+      } else if (isDown) {
+        Object.keys(downEntries).forEach(num => {
+          if (!cluedDownNumbers.has(num.toString())) {
+            words.push({
+              id: (word_id++).toString(),
+              cells: downEntries[num].cells,
+              dir: 'down'
+            });
+          }
         });
       }
     }
@@ -260,9 +277,9 @@ export function xw_read_ipuz(inputData) {
 
   if (!words.length) {
     if (!data.words) {
-      const thisGrid = new xwGrid(cells);
+      const fallbackGrid = thisGrid || new xwGrid(cells);
       let word_id = 1;
-      const acrossEntries = thisGrid.acrossEntries();
+      const acrossEntries = fallbackGrid.acrossEntries();
       Object.keys(acrossEntries).forEach(i => {
         words.push({
           id: (word_id++).toString(),
@@ -270,7 +287,7 @@ export function xw_read_ipuz(inputData) {
           dir: 'across'
         });
       });
-      const downEntries = thisGrid.downEntries();
+      const downEntries = fallbackGrid.downEntries();
       Object.keys(downEntries).forEach(i => {
         words.push({
           id: (word_id++).toString(),
