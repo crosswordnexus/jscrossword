@@ -88,8 +88,19 @@ export function xw_read_ipuz(inputData) {
       let solution = '';
       try {
         let raw = data.solution?.[y]?.[x];
-        if (typeof raw === 'string') solution = raw.toUpperCase();
-        else if (raw) solution = (raw.value || raw.cell || '').toUpperCase();
+        if (typeof raw === 'string') {
+          solution = raw.toUpperCase();
+        } else if (Array.isArray(raw)) {
+          solution = raw.map(v => (v ?? '').toString().toUpperCase()).join('/');
+        } else if (raw && typeof raw === 'object') {
+          if (raw.value !== undefined || raw.cell !== undefined) {
+            solution = (raw.value || raw.cell || '').toString().toUpperCase();
+          } else {
+            solution = Object.values(raw).map(v => (v ?? '').toString().toUpperCase()).join('/');
+          }
+        } else if (raw !== null && raw !== undefined) {
+          solution = raw.toString().toUpperCase();
+        }
       } catch {}
 
       // Set the "type"
