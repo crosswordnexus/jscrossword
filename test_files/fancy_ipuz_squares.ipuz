@@ -1,0 +1,33 @@
+{
+  "version": "http://ipuz.org/v2",
+  "kind": ["http://ipuz.org/crossword#1"],
+  "title": "Fancy iPuz Squares",
+  "copyright": "© 2026 Crossword Nexus. CC BY-NC-SA 4.0 License.",
+  "author": "Alex Boisvert",
+  "dimensions": {
+    "width": 3,
+    "height": 3
+  },
+  "puzzle": [
+    ["1", "2", "3"],
+    ["4", "0", "0"],
+    ["5", "0", "0"]
+  ],
+  "solution": [
+    [["C", "R"], "A", "P"],
+    ["A", "C", "E"],
+    ["T", "A", {"Across": "N", "Down": "T"}]
+  ],
+  "clues": {
+    "Across": [
+      ["1", "Word rhymed with \"bap\", in Doechii's \"BOOM BAP\""],
+      ["4", "Highest-ranking card in poker"],
+      ["5", "Result of getting some sun"]
+    ],
+    "Down": [
+      ["1", "Little furry critter"],
+      ["2", "Signature legislation of the Obama administration: Abbr."],
+      ["3", "Cherished family animal"]
+    ]
+  }
+}
